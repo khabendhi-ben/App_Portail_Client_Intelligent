@@ -1,0 +1,137 @@
+.sa-dashboard-content {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* ===== STAT CARDS ===== */
+.sa-stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.2rem;
+}
+
+.sa-stat-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.2rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  border: 1px solid #e9ecef;
+}
+
+.sa-stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+}
+
+.sa-stat-icon.purple { background: #ede9fe; }
+.sa-stat-icon.blue   { background: #dbeafe; }
+.sa-stat-icon.green  { background: #d1fae5; }
+.sa-stat-icon.orange { background: #ffedd5; }
+
+.sa-stat-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-bottom: 4px;
+  font-weight: 500;
+}
+
+.sa-stat-value {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1;
+}
+
+/* ===== BOTTOM ROW ===== */
+.sa-bottom-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+}
+
+.sa-card {
+  background: white;
+  border-radius: 8px;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  border: 1px solid #e9ecef;
+}
+
+.sa-card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 1.25rem;
+}
+
+/* ===== TABLE ===== */
+.sa-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.sa-table th {
+  text-align: left;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.sa-table td {
+  padding: 0.85rem 0.75rem;
+  font-size: 0.85rem;
+  color: #334155;
+  border-bottom: 1px solid #f8fafc;
+}
+
+.sa-table tr:last-child td { border-bottom: none; }
+.sa-table tbody tr:hover { background: #f8fafc; }
+
+/* ===== ACTIVITY ===== */
+.sa-activity-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sa-activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.sa-activity-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 5px;
+}
+
+.sa-activity-text {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.sa-activity-detail {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 2px;
+}

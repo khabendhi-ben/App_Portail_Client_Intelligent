@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import axios from 'axios';
+import api from '../../services/api';
 import './Login.css'; // On réutilise les styles premium du Login
 
 const ForgotPassword = () => {
@@ -15,13 +15,12 @@ const ForgotPassword = () => {
     setMessage('');
 
     try {
-      const response = await axios.post('http://localhost:8000/forgot-password', {
-        email: email,
-        password: "dummy_password" // On envoie un dummy car le schéma attend un password
+      const response = await api.post('/auth/forgot-password', {
+        email: email
       });
       setMessage(response.data.message);
     } catch (err) {
-      setError("Une erreur est survenue. Veuillez réessayer.");
+      setError(err.response?.data?.detail || "Une erreur est survenue. Veuillez réessayer.");
     } finally {
       setLoading(false);
     }
@@ -32,13 +31,13 @@ const ForgotPassword = () => {
       <div className="login-card">
         <div className="login-header">
           <img src="/logo.png" alt="Logo Le Matin" className="logo-image" />
-          <h2>Réinitialisation</h2>
-          <p>Entrez votre email pour faire une demande au SuperAdmin</p>
+          
+          <p>Entrez votre adresse e-mail pour réinitialiser votre mot de passe</p>
         </div>
 
         <form onSubmit={handleSubmit}>
           <div className="input-group">
-            <label>Votre Email</label>
+            <label>Email</label>
             <input 
               type="email" 
               value={email} 
@@ -52,7 +51,7 @@ const ForgotPassword = () => {
           {error && <p style={{ color: '#ef4444', textAlign: 'center', marginBottom: '15px' }}>{error}</p>}
 
           <button type="submit" className="login-btn" disabled={loading}>
-            {loading ? "Envoi en cours..." : "Envoyer la demande"}
+            {loading ? "Envoi en cours..." : "Valider"}
           </button>
         </form>
 

@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<robot generator="Robot 7.4.2 (Python 3.14.4 on win32)" generated="2026-06-09T16:30:17.281133" rpa="false" schemaversion="5">
+<suite id="s1" name="Test login" source="C:\Users\Home\Downloads\Projet_Portail_Client\Tests\Test_login.robot">
+<test id="s1-t1" name="Connexion SuperAdmin Reussie" line="6">
+<kw name="New Browser" owner="Browser">
+<msg time="2026-06-09T16:30:17.705394" level="INFO">{"browser": "chromium", "headless": false, "chromiumSandbox": false, "devtools": false, "handleSIGHUP": true, "handleSIGINT": true, "handleSIGTERM": true, "slowMo": 0.0, "timeout": 30000.0, "tracesDir": "C:\\Users\\Home\\Downloads\\Projet_Portail_Client\\browser\\traces\\temp\\4a8d027d-d904-40a6-8df3-937f09ed40ac"}</msg>
+<msg time="2026-06-09T16:30:17.767458" level="INFO">Starting Browser process C:\Users\Home\Downloads\Projet_Portail_Client\backend\venv\Lib\site-packages\Browser\wrapper\index.js using at 127.0.0.1:49908</msg>
+<msg time="2026-06-09T16:30:19.248916" level="INFO">Successfully created browser with options: {"browser":"chromium","headless":false,"chromiumSandbox":false,"devtools":false,"handleSIGHUP":true,"handleSIGINT":true,"handleSIGTERM":true,"slowMo":0,"timeout":30000,"tracesDir":"C:\\Users\\Home\\Downloads\\Projet_Portail_Client\\browser\\traces\\temp\\4a8d027d-d904-40a6-8df3-937f09ed40ac"}</msg>
+<arg>browser=chromium</arg>
+<arg>headless=False</arg>
+<tag>BrowserControl</tag>
+<tag>Setter</tag>
+<doc>Create a new playwright Browser with specified options.</doc>
+<status status="PASS" start="2026-06-09T16:30:17.703858" elapsed="1.545497"/>
+</kw>
+<kw name="New Page" owner="Browser">
+<msg time="2026-06-09T16:30:19.989368" level="INFO">Successfully initialized new page object and opened url: http://localhost:5173/login</msg>
+<msg time="2026-06-09T16:30:19.989506" level="INFO">No context was open. New context was automatically opened when this page is created.</msg>
+<arg>http://localhost:5173/login</arg>
+<tag>BrowserControl</tag>
+<tag>Setter</tag>
+<doc>Open a new Page.</doc>
+<status status="PASS" start="2026-06-09T16:30:19.250531" elapsed="0.739356"/>
+</kw>
+<kw name="Fill Text" owner="Browser">
+<msg time="2026-06-09T16:30:19.991568" level="INFO">Fills the text 'Superadmin@lematin.ma' in the given field.</msg>
+<arg>input[type="email"]</arg>
+<arg>Superadmin@lematin.ma</arg>
+<tag>PageContent</tag>
+<tag>Setter</tag>
+<doc>Clears and fills the given ``txt`` into the text field found by ``selector``.</doc>
+<status status="PASS" start="2026-06-09T16:30:19.990541" elapsed="0.067483"/>
+</kw>
+<kw name="Fill Text" owner="Browser">
+<msg time="2026-06-09T16:30:20.060625" level="INFO">Fills the text 'admin123' in the given field.</msg>
+<arg>input[type="password"]</arg>
+<arg>admin123</arg>
+<tag>PageContent</tag>
+<tag>Setter</tag>
+<doc>Clears and fills the given ``txt`` into the text field found by ``selector``.</doc>
+<status status="PASS" start="2026-06-09T16:30:20.058945" elapsed="0.023604"/>
+</kw>
+<kw name="Take Screenshot" owner="Browser">
+<msg time="2026-06-09T16:30:20.470728" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="browser/screenshot/Superadmin_saisie.png" target="_blank"&gt;&lt;img src="browser/screenshot/Superadmin_saisie.png" width="800px"/&gt;&lt;/a&gt;</msg>
+<arg>filename=Superadmin_saisie</arg>
+<tag>PageContent</tag>
+<doc>Takes a screenshot of the current window or element and saves it to disk.</doc>
+<status status="PASS" start="2026-06-09T16:30:20.083164" elapsed="0.387871"/>
+</kw>
+<kw name="Click" owner="Browser">
+<msg time="2026-06-09T16:30:20.473066" level="INFO">Clicks the element 'button[type="submit"]'.</msg>
+<arg>button[type="submit"]</arg>
+<tag>PageContent</tag>
+<tag>Setter</tag>
+<doc>Simulates mouse click on the element found by ``selector``.</doc>
+<status status="PASS" start="2026-06-09T16:30:20.471649" elapsed="0.222318"/>
+</kw>
+<kw name="Wait For Condition" owner="Browser">
+<kw name="Get Url" owner="Browser">
+<arg>contains</arg>
+<arg>dashboard</arg>
+<tag>Assertion</tag>
+<tag>Getter</tag>
+<tag>PageContent</tag>
+<doc>Returns the current URL.</doc>
+<status status="PASS" start="2026-06-09T16:30:20.696324" elapsed="0.806701"/>
+</kw>
+<arg>Url</arg>
+<arg>contains</arg>
+<arg>dashboard</arg>
+<arg>timeout=5s</arg>
+<tag>PageContent</tag>
+<tag>Wait</tag>
+<doc>Waits for a condition, defined with Browser getter keywords to become True.</doc>
+<status status="PASS" start="2026-06-09T16:30:20.694655" elapsed="0.808848"/>
+</kw>
+<kw name="Take Screenshot" owner="Browser">
+<msg time="2026-06-09T16:30:21.806489" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="browser/screenshot/Superadmin_dashb_ok.png" target="_blank"&gt;&lt;img src="browser/screenshot/Superadmin_dashb_ok.png" width="800px"/&gt;&lt;/a&gt;</msg>
+<arg>filename=Superadmin_dashb_ok</arg>
+<tag>PageContent</tag>
+<doc>Takes a screenshot of the current window or element and saves it to disk.</doc>
+<status status="PASS" start="2026-06-09T16:30:21.504351" elapsed="0.302688"/>
+</kw>
+<kw name="Close Browser" owner="Browser">
+<msg time="2026-06-09T16:30:22.166925" level="INFO">Closed browser</msg>
+<tag>BrowserControl</tag>
+<tag>Setter</tag>
+<doc>Closes the current browser.</doc>
+<status status="PASS" start="2026-06-09T16:30:21.807650" elapsed="0.359520"/>
+</kw>
+<status status="PASS" start="2026-06-09T16:30:17.701666" elapsed="4.467528"/>
+</test>
+<test id="s1-t2" name="Connexion Admin Reussie" line="31">
+<kw name="New Browser" owner="Browser">
+<msg time="2026-06-09T16:30:22.194891" level="INFO">{"browser": "chromium", "headless": false, "chromiumSandbox": false, "devtools": false, "handleSIGHUP": true, "handleSIGINT": true, "handleSIGTERM": true, "slowMo": 0.0, "timeout": 30000.0, "tracesDir": "C:\\Users\\Home\\Downloads\\Projet_Portail_Client\\browser\\traces\\temp\\09129e75-7900-4007-91ec-f70351f84a51"}</msg>
+<msg time="2026-06-09T16:30:22.597511" level="INFO">Successfully created browser with options: {"browser":"chromium","headless":false,"chromiumSandbox":false,"devtools":false,"handleSIGHUP":true,"handleSIGINT":true,"handleSIGTERM":true,"slowMo":0,"timeout":30000,"tracesDir":"C:\\Users\\Home\\Downloads\\Projet_Portail_Client\\browser\\traces\\temp\\09129e75-7900-4007-91ec-f70351f84a51"}</msg>
+<arg>browser=chromium</arg>
+<arg>headless=False</arg>
+<tag>BrowserControl</tag>
+<tag>Setter</tag>
+<doc>Create a new playwright Browser with specified options.</doc>
+<status status="PASS" start="2026-06-09T16:30:22.191412" elapsed="0.406786"/>
+</kw>
+<kw name="New Page" owner="Browser">
+<msg time="2026-06-09T16:30:23.364470" level="INFO">Successfully initialized new page object and opened url: http://localhost:5173/login</msg>
+<msg time="2026-06-09T16:30:23.364633" level="INFO">No context was open. New context was automatically opened when this page is created.</msg>
+<arg>http://localhost:5173/login</arg>
+<tag>BrowserControl</tag>
+<tag>Setter</tag>
+<doc>Open a new Page.</doc>
+<status status="PASS" start="2026-06-09T16:30:22.602438" elapsed="0.762517"/>
+</kw>
+<kw name="Fill Text" owner="Browser">
+<msg time="2026-06-09T16:30:23.366749" level="INFO">Fills the text 'admin@lematin.ma' in the given field.</msg>
+<arg>input[type="email"]</arg>
+<arg>admin@lematin.ma</arg>
+<tag>PageContent</tag>
+<tag>Setter</tag>
+<doc>Clears and fills the given ``txt`` into the text field found by ``selector``.</doc>
+<status status="PASS" start="2026-06-09T16:30:23.365583" elapsed="0.091193"/>
+</kw>
+<kw name="Fill Text" owner="Browser">
+<msg time="2026-06-09T16:30:23.458474" level="INFO">Fills the text 'admin123' in the given field.</msg>
+<arg>input[type="password"]</arg>
+<arg>admin123</arg>
+<tag>PageContent</tag>
+<tag>Setter</tag>
+<doc>Clears and fills the given ``txt`` into the text field found by ``selector``.</doc>
+<status status="PASS" start="2026-06-09T16:30:23.457456" elapsed="0.046825"/>
+</kw>
+<kw name="Take Screenshot" owner="Browser">
+<msg time="2026-06-09T16:30:23.857164" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="browser/screenshot/admin_saisie.png" target="_blank"&gt;&lt;img src="browser/screenshot/admin_saisie.png" width="800px"/&gt;&lt;/a&gt;</msg>
+<arg>filename=admin_saisie</arg>
+<tag>PageContent</tag>
+<doc>Takes a screenshot of the current window or element and saves it to disk.</doc>
+<status status="PASS" start="2026-06-09T16:30:23.506104" elapsed="0.351431"/>
+</kw>
+<kw name="Click" owner="Browser">
+<msg time="2026-06-09T16:30:23.859250" level="INFO">Clicks the element 'button[type="submit"]'.</msg>
+<arg>button[type="submit"]</arg>
+<tag>PageContent</tag>
+<tag>Setter</tag>
+<doc>Simulates mouse click on the element found by ``selector``.</doc>
+<status status="PASS" start="2026-06-09T16:30:23.858038" elapsed="0.211888"/>
+</kw>
+<kw name="Wait For Condition" owner="Browser">
+<kw name="Get Url" owner="Browser">
+<arg>contains</arg>
+<arg>admin/dashboard</arg>
+<tag>Assertion</tag>
+<tag>Getter</tag>
+<tag>PageContent</tag>
+<doc>Returns the current URL.</doc>
+<status status="PASS" start="2026-06-09T16:30:24.071721" elapsed="0.789105"/>
+</kw>
+<arg>Url</arg>
+<arg>contains</arg>
+<arg>admin/dashboard</arg>
+<arg>timeout=5s</arg>
+<tag>PageContent</tag>
+<tag>Wait</tag>
+<doc>Waits for a condition, defined with Browser getter keywords to become True.</doc>
+<status status="PASS" start="2026-06-09T16:30:24.070576" elapsed="0.790519"/>
+</kw>
+<kw name="Take Screenshot" owner="Browser">
+<msg time="2026-06-09T16:30:25.121471" level="INFO" html="true">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td colspan="3"&gt;&lt;a href="browser/screenshot/admin_dashb_ok.png" target="_blank"&gt;&lt;img src="browser/screenshot/admin_dashb_ok.png" width="800px"/&gt;&lt;/a&gt;</msg>
+<arg>filename=admin_dashb_ok</arg>
+<tag>PageContent</tag>
+<doc>Takes a screenshot of the current window or element and saves it to disk.</doc>
+<status status="PASS" start="2026-06-09T16:30:24.861990" elapsed="0.259685"/>
+</kw>
+<kw name="Close Browser" owner="Browser">
+<msg time="2026-06-09T16:30:25.492485" level="INFO">Closed browser</msg>
+<tag>BrowserControl</tag>
+<tag>Setter</tag>
+<doc>Closes the current browser.</doc>
+<status status="PASS" start="2026-06-09T16:30:25.122214" elapsed="0.370469"/>
+</kw>
+<status status="PASS" start="2026-06-09T16:30:22.179695" elapsed="3.313633"/>
+</test>
+<doc>Fichier de test de connexion pour le Portail Client</doc>
+<status status="PASS" start="2026-06-09T16:30:17.286871" elapsed="8.214710"/>
+</suite>
+<statistics>
+<total>
+<stat pass="2" fail="0" skip="0">All Tests</stat>
+</total>
+<tag>
+</tag>
+<suite>
+<stat name="Test login" id="s1" pass="2" fail="0" skip="0">Test login</stat>
+</suite>
+</statistics>
+<errors>
+</errors>
+</robot>

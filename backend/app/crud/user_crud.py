@@ -1,3 +1,9 @@
+# (Create, Read, Update, Delete). 
+# C'est l'unique couche autorisée à 
+# interagir avec la base de données. 
+# Elle exécute les requêtes SQL abstraites.
+        
+        
 from sqlalchemy.orm import Session
 import app.models.user_model as user_model, app.schemas.user_schema as user_schema, app.core.security as security
 
@@ -9,16 +15,30 @@ def get_user_by_email(db: Session, email: str):
     """Cherche un utilisateur par son Email"""
     return db.query(user_model.User).filter(user_model.User.email == email).first()
 
-def create_user(db: Session, user: user_schema.UserCreate):
+def get_all_users(db: Session):
+    return db.query(user_model.User).all()
+
+def get_users_by_role(db: Session, role: str):
+    """Récupère tous les utilisateurs d'un rôle donné"""
+    mapping = {"superadmin": 0, "admin": 1, "client": 2}
+    r_id = mapping.get(str(role).lower().split('.')[-1], 2)
+    return db.query(user_model.User).filter(user_model.User.role_id == r_id).all()
+
+def create_user(db: Session, user: user_schema.UserCreate, hashed_password: str):
     """Crée un nouvel utilisateur avec mot de passe haché"""
-    hashed_pwd = security.get_password_hash(user.password)
     db_user = user_model.User(
+        nom=user.nom,
         email=user.email,
-        hashed_password=hashed_pwd,
-        role=user.role
+        phone=user.phone,
+        hashed_password=hashed_password,
+        role=user.role,
+        must_change_password=True
     )
     db.add(db_user)
     db.commit()
+    db.refresh(db_user)
+    return db_user
+
 def create_reset_request(db: Session, email: str):
     """Crée une nouvelle demande de réinitialisation"""
     db_request = user_model.PasswordResetRequest(email=email)
@@ -46,3 +66,148 @@ def mark_reset_request_done(db: Session, request_id: int):
     if request:
         request.status = "traité"
         db.commit()
+        
+def delete_user(db: Session, user_id: int):
+    """Supprime un utilisateur de la base de données avec nettoyage en cascade"""
+    db_user = db.query(user_model.User).filter(user_model.User.id == user_id).first()
+    if db_user:
+        # 1. Supprimer le profil client si existant
+        if db_user.client_profile:
+            db.delete(db_user.client_profile)
+            
+        # 2. Supprimer les réclamations de l'utilisateur
+        if db_user.claims:
+            for claim in db_user.claims:
+                db.delete(claim)
+                
+        # 3. Supprimer les annonces de l'utilisateur
+        if db_user.announcements:
+            for ann in db_user.announcements:
+                db.delete(ann)
+                
+        # 4. Supprimer les conversations IA de l'utilisateur
+        if db_user.ai_conversations:
+            for conv in db_user.ai_conversations:
+                # Supprimer les messages de la conversation d'abord
+                for msg in conv.messages:
+                    db.delete(msg)
+                db.delete(conv)
+                
+        # 5. Supprimer les demandes de réinitialisation de mot de passe associées à cet email
+        db.query(user_model.PasswordResetRequest).filter(
+            user_model.PasswordResetRequest.email == db_user.email
+        ).delete(synchronize_session=False)
+        
+        # 6. Dissocier les logs système (mettre user_id à None)
+        db.query(user_model.SystemLog).filter(
+            user_model.SystemLog.user_id == user_id
+        ).update({user_model.SystemLog.user_id: None}, synchronize_session=False)
+
+        # 7. Supprimer l'utilisateur
+        db.delete(db_user)
+        db.commit()
+        return True
+    return False
+
+def deactivate_user(db: Session, user_id: int):
+    """Désactive un utilisateur"""
+    db_user = db.query(user_model.User).filter(user_model.User.id == user_id).first()
+    if db_user:
+        db_user.is_active = False
+        db.commit()
+        db.refresh(db_user)
+        return db_user
+    return None
+
+def update_user(db: Session, user_id: int, user_data: user_schema.UserUpdate):
+    """Met à jour les informations d'un utilisateur"""
+    db_user = db.query(user_model.User).filter(user_model.User.id == user_id).first()
+    if not db_user:
+        return None
+
+    update_dict = user_data.dict(exclude_unset=True)
+    if "password" in update_dict and update_dict["password"]:
+        db_user.hashed_password = security.get_password_hash(update_dict["password"])
+        del update_dict["password"]
+
+    for key, value in update_dict.items():
+        setattr(db_user, key, value)
+
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+
+# ─── CRUD CLIENTS ─────────────────────────────────────────────
+
+def create_client_with_profile(db: Session, client_data: user_schema.ClientCreate, hashed_password: str):
+    """Crée un utilisateur (rôle client) + son profil client en une seule opération"""
+    # 1. Créer le User
+    db_user = user_model.User(
+        nom=client_data.nom,
+        email=client_data.email,
+        phone=client_data.phone,
+        hashed_password=hashed_password,
+        role=user_model.UserRole.CLIENT,
+        must_change_password=True
+    )
+    db.add(db_user)
+    db.flush()  # Pour obtenir l'ID avant le commit
+
+    # 2. Créer le profil Client
+    db_client = user_model.Client(
+        user_id=db_user.id,
+        company_name=client_data.company_name,
+        phone=client_data.phone,
+        address=client_data.address,
+        subscription_type=client_data.subscription_type,
+        budget=client_data.budget
+    )
+    db.add(db_client)
+    db.commit()
+    db.refresh(db_user)
+    db.refresh(db_client)
+
+    return db_user, db_client
+
+def get_all_clients_with_profile(db: Session):
+    """Récupère tous les clients avec leur profil"""
+    clients = db.query(user_model.User).filter(
+        user_model.User.role_id == 2
+    ).all()
+    return clients
+
+def get_client_profile(db: Session, user_id: int):
+    """Récupère le profil client associé à un user_id"""
+    return db.query(user_model.Client).filter(user_model.Client.user_id == user_id).first()
+
+def update_client_with_profile(db: Session, user_id: int, client_data: user_schema.ClientUpdate):
+    """Met à jour un client (User + profil Client)"""
+    db_user = db.query(user_model.User).filter(user_model.User.id == user_id).first()
+    if not db_user:
+        return None, None
+
+    # Mise à jour du User
+    update_dict = client_data.dict(exclude_unset=True)
+    user_fields = ["nom", "email", "phone"]
+    for field in user_fields:
+        if field in update_dict:
+            setattr(db_user, field, update_dict[field])
+
+    # Mise à jour du profil Client
+    db_client = db.query(user_model.Client).filter(user_model.Client.user_id == user_id).first()
+    if db_client:
+        client_fields = ["company_name", "address", "subscription_type", "budget"]
+        for field in client_fields:
+            if field in update_dict:
+                setattr(db_client, field, update_dict[field])
+        # Synchroniser le téléphone
+        if "phone" in update_dict:
+            db_client.phone = update_dict["phone"]
+
+    db.commit()
+    db.refresh(db_user)
+    if db_client:
+        db.refresh(db_client)
+
+    return db_user, db_client

@@ -1,0 +1,540 @@
+/* AdminDashboard.css - Theme: HSL Green/Teal (#269d98) */
+
+.ad-dashboard-container {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #ffffff;
+  min-height: calc(100vh - 60px);
+}
+
+/* ==========================================================================
+   WELCOME BANNER
+   ========================================================================== */
+.ad-welcome-banner {
+  background: linear-gradient(135deg, #1e6b6b 0%, #269d98 100%);
+  border-radius: 12px;
+  padding: 2rem;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 20px rgba(38, 157, 152, 0.15);
+  overflow: hidden;
+  position: relative;
+}
+
+.ad-welcome-text h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin: 0 0 0.5rem 0;
+  letter-spacing: -0.025em;
+}
+
+.ad-welcome-text p {
+  font-size: 0.95rem;
+  opacity: 0.9;
+  max-width: 600px;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.ad-banner-illustration {
+  width: 120px;
+  height: 120px;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   STAT CARDS
+   ========================================================================== */
+.ad-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.25rem;
+}
+
+.ad-stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  border: 1px solid #e2e8f0;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.ad-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.ad-stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.ad-stat-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.card-total .ad-stat-icon {
+  background-color: #e6f5f4;
+  color: #269d98;
+}
+
+.card-active .ad-stat-icon {
+  background-color: #f0fdf4;
+  color: #15803d;
+}
+
+.card-inactive .ad-stat-icon {
+  background-color: #fef2f2;
+  color: #b91c1c;
+}
+
+.card-resets .ad-stat-icon {
+  background-color: #fffbeb;
+  color: #b45309;
+}
+
+.card-resets.has-pending {
+  border-color: #fde047;
+  background-color: #fffbeb;
+}
+
+.card-resets.has-pending .ad-stat-icon {
+  background-color: #fef3c7;
+  color: #d97706;
+}
+
+.ad-badge-pulse {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 10px;
+  height: 10px;
+  background-color: #ef4444;
+  border-radius: 50%;
+  border: 2px solid white;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+.ad-stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.ad-stat-label {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.ad-stat-value {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+/* ==========================================================================
+   DASHBOARD LAYOUT ROW
+   ========================================================================== */
+.ad-dashboard-main-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .ad-dashboard-main-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.ad-card {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+}
+
+.ad-card-header {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.ad-card-header h3, .ad-card h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.ad-btn-link {
+  background: none;
+  border: none;
+  color: #269d98;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.ad-btn-link:hover {
+  color: #1e6b6b;
+  text-decoration: underline;
+}
+
+.ad-card-body {
+  padding: 1.25rem 1.5rem;
+  flex-grow: 1;
+}
+
+/* ==========================================================================
+   RECENT CLIENTS TABLE
+   ========================================================================== */
+.ad-table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.ad-dashboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.ad-dashboard-table th {
+  padding: 0.75rem 1rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: #64748b;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.ad-dashboard-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #f8fafc;
+  font-size: 0.85rem;
+  vertical-align: middle;
+}
+
+.ad-dashboard-table tbody tr:hover td {
+  background-color: #f8fafc;
+}
+
+.ad-company-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.ad-company-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background-color: #e6f5f4;
+  color: #269d98;
+  font-weight: 700;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ad-company-name {
+  display: block;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.ad-company-email {
+  display: block;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.ad-contact-name {
+  color: #334155;
+  font-weight: 500;
+}
+
+/* Subscription status */
+.ad-sub-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.6rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.ad-sub-badge.standard {
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+.ad-sub-badge.premium {
+  background-color: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #fed7aa;
+}
+
+/* Active Status Dot */
+.ad-status-dot-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+.ad-status-dot-badge .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.ad-status-dot-badge.active {
+  color: #166534;
+}
+
+.ad-status-dot-badge.active .dot {
+  background-color: #22c55e;
+}
+
+.ad-status-dot-badge.inactive {
+  color: #991b1b;
+}
+
+.ad-status-dot-badge.inactive .dot {
+  background-color: #ef4444;
+}
+
+/* ==========================================================================
+   SIDEBAR COLUMN WIDGETS
+   ========================================================================== */
+.ad-dashboard-sidebar-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.ad-sub-card {
+  padding: 1.5rem;
+}
+
+.ad-sub-distribution {
+  margin-top: 1rem;
+}
+
+.ad-stacked-bar {
+  display: flex;
+  height: 16px;
+  border-radius: 8px;
+  overflow: hidden;
+  background-color: #f1f5f9;
+  margin-bottom: 1.25rem;
+}
+
+.ad-bar-segment {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.ad-bar-segment.standard { background-color: #94a3b8; }
+.ad-bar-segment.premium  { background-color: #269d98; }
+.ad-bar-segment.other    { background-color: #b45309; }
+
+.ad-distribution-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  font-size: 0.8rem;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
+  flex-shrink: 0;
+}
+
+.legend-dot.standard { background-color: #94a3b8; }
+.legend-dot.premium  { background-color: #269d98; }
+.legend-dot.other    { background-color: #b45309; }
+
+.legend-label {
+  font-weight: 500;
+  color: #475569;
+  flex-grow: 1;
+}
+
+.legend-count {
+  color: #64748b;
+  font-weight: 600;
+}
+
+/* ==========================================================================
+   PASSWORD RESETS LIST
+   ========================================================================== */
+.ad-resets-card h3 {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.ad-resets-card .ad-card-body {
+  padding: 0;
+}
+
+.ad-resets-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.ad-reset-item {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #f8fafc;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.15s;
+}
+
+.ad-reset-item:hover {
+  background-color: #f8fafc;
+}
+
+.ad-reset-item:last-child {
+  border-bottom: none;
+}
+
+.ad-reset-item-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* Ensures truncation works if needed */
+}
+
+.ad-reset-email {
+  font-weight: 600;
+  color: #334155;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ad-reset-time {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+
+.ad-btn-action-treat {
+  background-color: #e6f5f4;
+  color: #269d98;
+  border: 1px solid rgba(38, 157, 152, 0.15);
+  border-radius: 6px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.ad-btn-action-treat:hover {
+  background-color: #269d98;
+  color: white;
+  border-color: #269d98;
+}
+
+.ad-view-all-resets {
+  background: none;
+  border: none;
+  border-top: 1px solid #f1f5f9;
+  color: #269d98;
+  font-weight: 600;
+  font-size: 0.8rem;
+  padding: 1rem;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.ad-view-all-resets:hover {
+  background-color: #f8fafc;
+  text-decoration: underline;
+}
+
+/* Placeholder & empty states */
+.ad-loading-placeholder {
+  color: #94a3b8;
+  padding: 2rem;
+  text-align: center;
+}
+
+.ad-empty-state {
+  color: #94a3b8;
+  padding: 2rem;
+  text-align: center;
+  font-size: 0.85rem;
+}
+
+.ad-empty-state-check {
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  color: #64748b;
+}
+
+.ad-empty-state-check .check-icon {
+  width: 36px;
+  height: 36px;
+  background-color: #f0fdf4;
+  color: #15803d;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+}
+
+.ad-empty-state-check p {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.4;
+}

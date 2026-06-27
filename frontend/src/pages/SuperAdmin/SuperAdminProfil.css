@@ -1,0 +1,163 @@
+.sa-profil-content {
+  padding: 1.5rem;
+}
+
+.profil-card {
+  background: white;
+  border-radius: 10px;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 500px;
+  overflow: hidden;
+}
+
+/* ===== COLONNE GAUCHE ===== */
+.profil-left {
+  background: white;
+  border-right: 1px solid #f1f5f9;
+  padding: 2rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.profil-avatar-large {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2e6b6b, #3d8c8c);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.profil-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 0.2rem;
+}
+
+.profil-company {
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-bottom: 1rem;
+}
+
+.profil-photo-btn {
+  background: white;
+  border: 1px solid #e2e8f0;
+  color: #475569;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  margin-bottom: 1.5rem;
+  transition: all 0.2s;
+}
+
+.profil-photo-btn:hover {
+  background: #f8fafc;
+  border-color: #2e6b6b;
+  color: #2e6b6b;
+}
+
+.profil-contact-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  text-align: left;
+}
+
+.profil-contact-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  color: #475569;
+}
+
+/* ===== COLONNE DROITE ===== */
+.profil-right {
+  padding: 2rem 1.75rem;
+}
+
+.profil-section-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 1.5rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.profil-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.profil-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.profil-field.full {
+  flex: 1 1 100%;
+}
+
+.profil-field label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.profil-field input {
+  padding: 0.55rem 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  font-size: 0.82rem;
+  color: #334155;
+  background: #f8fafc;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.profil-field input:focus {
+  border-color: #2e6b6b;
+  background: white;
+  box-shadow: 0 0 0 2px rgba(46, 107, 107, 0.1);
+}
+
+.profil-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+}
+
+.profil-save-btn {
+  background: #2e6b6b;
+  color: white;
+  border: none;
+  padding: 0.65rem 1.4rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.profil-save-btn:hover {
+  background: #245858;
+}

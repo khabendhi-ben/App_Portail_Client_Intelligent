@@ -1,3 +1,8 @@
+#Script utilitaire d'initialisation permettant 
+# de peupler la base de données avec 
+# les premiers utilisateurs (SuperAdmin, Admin).
+
+
 from backend.app.core.database import SessionLocal
 from backend.app.models.user_model import User, UserRole
 from backend.app.core.security import get_password_hash

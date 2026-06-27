@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import './Login.css';
 
@@ -7,6 +7,14 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sessionExpiredMsg, setSessionExpiredMsg] = useState(false);
+
+  useEffect(() => {
+    if (localStorage.getItem('session_expired') === 'true') {
+      setSessionExpiredMsg(true);
+      localStorage.removeItem('session_expired');
+    }
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,19 +31,26 @@ const Login = () => {
 
       const token = response.data.access_token;
       const role = response.data.role; // On récupère le rôle
+      const mustChange = response.data.must_change_password;
       
       localStorage.setItem('token', token);
       localStorage.setItem('role', role);
       
       console.log(`Connexion réussie ! Rôle: ${role}`);
       
-      // Redirection selon le rôle (US-004)
-      if (role === 'superadmin') {
-        window.location.href = '/superadmin/dashboard';
-      } else if (role === 'admin') {
-        window.location.href = '/admin/dashboard';
+      if (mustChange) {
+        localStorage.setItem('must_change_password', 'true');
+        window.location.href = '/change-password-required';
       } else {
-        window.location.href = '/client/dashboard';
+        localStorage.removeItem('must_change_password');
+        // Redirection selon le rôle (US-004)
+        if (role === 'superadmin') {
+          window.location.href = '/superadmin/dashboard';
+        } else if (role === 'admin') {
+          window.location.href = '/admin/dashboard';
+        } else {
+          window.location.href = '/client/dashboard';
+        }
       }
 
     } catch (err) {
@@ -51,8 +66,9 @@ const Login = () => {
 
   return (
     <div className="login-container">
-      <div className="login-card">
-        <div className="login-header">
+      <div className="login-card-wrapper">
+        <div className="login-card">
+          <div className="login-header">
           {/* Logo du Groupe Le Matin */}
           <img 
             src="/logo.png" 
@@ -62,6 +78,22 @@ const Login = () => {
           <h2>Portail Client</h2>
           <p></p>
         </div>
+
+        {sessionExpiredMsg && (
+          <div style={{
+            background: '#fef2f2',
+            border: '1px solid #fecaca',
+            color: '#dc2626',
+            padding: '12px',
+            borderRadius: '8px',
+            fontSize: '0.85rem',
+            marginBottom: '16px',
+            textAlign: 'center',
+            lineHeight: 1.4
+          }}>
+            Votre session a expiré en raison de votre inactivité. Veuillez vous reconnecter.
+          </div>
+        )}
 
         <form onSubmit={handleSubmit}>
           <div className="input-group">
@@ -99,6 +131,7 @@ const Login = () => {
 
         <div style={{ marginTop: '24px', textAlign: 'center', fontSize: '0.8rem', color: '#64748b' }}>
           
+        </div>
         </div>
       </div>
     </div>
