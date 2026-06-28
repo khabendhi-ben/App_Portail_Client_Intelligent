@@ -11,6 +11,22 @@ const ClientReclamations = () => {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState('');
 
+  // États pour les filtres
+  const [inputReference, setInputReference] = useState('');
+  const [inputOrder, setInputOrder] = useState('');
+  const [inputDate, setInputDate] = useState('');
+  const [inputStatus, setInputStatus] = useState('all');
+  
+  const [appliedReference, setAppliedReference] = useState('');
+  const [appliedOrder, setAppliedOrder] = useState('');
+  const [appliedDate, setAppliedDate] = useState('');
+  const [appliedStatus, setAppliedStatus] = useState('all');
+
+  const [isDateFocused, setIsDateFocused] = useState(false);
+
+  // État pour le menu déroulant d'actions ouvert (ID de la réclamation)
+  const [openDropdownId, setOpenDropdownId] = useState(null);
+
   // Formulaire de dépôt
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [subject, setSubject] = useState('');
@@ -58,6 +74,17 @@ const ClientReclamations = () => {
 
   useEffect(() => {
     fetchReclamations();
+  }, []);
+
+  // Fermer le dropdown d'actions si on clique à l'extérieur
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (!e.target.closest('.orders-action-btn') && !e.target.closest('.orders-action-dropdown')) {
+        setOpenDropdownId(null);
+      }
+    };
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
   }, []);
 
   // Pré-remplir le formulaire si on vient de la page d'annonces
@@ -128,18 +155,123 @@ const ClientReclamations = () => {
     }
   };
 
+  const handleFilterSubmit = (e) => {
+    if (e) e.preventDefault();
+    setAppliedReference(inputReference);
+    setAppliedOrder(inputOrder);
+    setAppliedDate(inputDate);
+    setAppliedStatus(inputStatus);
+  };
+
+  const handleResetFilters = () => {
+    setInputReference('');
+    setInputOrder('');
+    setInputDate('');
+    setInputStatus('all');
+    
+    setAppliedReference('');
+    setAppliedOrder('');
+    setAppliedDate('');
+    setAppliedStatus('all');
+  };
+
+  const toggleDropdown = (e, id) => {
+    e.stopPropagation();
+    setOpenDropdownId(openDropdownId === id ? null : id);
+  };
+
+  // Filtrage côté client
+  const filteredReclamations = reclamations.filter(rec => {
+    if (appliedReference.trim() !== '') {
+      const refStr = (rec.reference || `REC-${rec.id.toString().padStart(5, '0')}`).toLowerCase();
+      if (!refStr.includes(appliedReference.trim().toLowerCase())) {
+        return false;
+      }
+    }
+    
+    if (appliedOrder.trim() !== '') {
+      const orderStr = (rec.announcement_ref || '').toLowerCase();
+      if (!orderStr.includes(appliedOrder.trim().toLowerCase())) {
+        return false;
+      }
+    }
+    
+    if (appliedDate) {
+      const recDate = new Date(rec.created_at).toISOString().slice(0, 10);
+      if (recDate !== appliedDate) {
+        return false;
+      }
+    }
+    
+    if (appliedStatus !== 'all') {
+      if (rec.status !== appliedStatus) {
+        return false;
+      }
+    }
+    
+    return true;
+  });
+
   return (
     <div className="client-body-content" style={{ padding: '2rem' }}>
       
       <div className="client-announcements-panel">
         
-        {/* Barre d'outils avec bouton d'action */}
-        <div className="client-toolbar" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
-          <div>
-            <h3 style={{ margin: 0, fontSize: '1.05rem', color: '#1e293b', fontWeight: '700' }}>Suivi de vos demandes</h3>
-            <p style={{ margin: '4px 0 0 0', fontSize: '0.82rem', color: '#64748b' }}></p>
-          </div>
-        </div>
+        {/* Barre de filtres (Recherche manuelle avec boutons Filtrer / Réinitialiser) */}
+        <form onSubmit={handleFilterSubmit} className="orders-filter-bar">
+          <input 
+            type="text"
+            placeholder="Référence"
+            value={inputReference}
+            onChange={(e) => setInputReference(e.target.value)}
+            className="orders-filter-input"
+          />
+          
+          <input 
+            type="text"
+            placeholder="Commande associée"
+            value={inputOrder}
+            onChange={(e) => setInputOrder(e.target.value)}
+            className="orders-filter-input"
+          />
+          
+          <input 
+            type={isDateFocused || inputDate ? "date" : "text"}
+            placeholder="Date de dépôt"
+            value={inputDate}
+            onFocus={() => setIsDateFocused(true)}
+            onBlur={() => setIsDateFocused(false)}
+            onChange={(e) => setInputDate(e.target.value)}
+            className="orders-filter-input"
+          />
+
+          <select 
+            value={inputStatus} 
+            onChange={(e) => setInputStatus(e.target.value)}
+            className="orders-filter-select"
+          >
+            <option value="all">Statut</option>
+            <option value="open">Ouverte</option>
+            <option value="pending">En cours</option>
+            <option value="resolved">Résolue</option>
+          </select>
+
+          <button type="submit" className="orders-filter-btn">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            Filtrer
+          </button>
+
+          <button 
+            type="button" 
+            onClick={handleResetFilters} 
+            className="orders-reset-btn"
+          >
+            Réinitialiser
+          </button>
+        </form>
 
         {/* Tableau des réclamations */}
         <div className="sa-card">
@@ -153,7 +285,11 @@ const ClientReclamations = () => {
                 borderRadius: '50%',
                 animation: 'client-spin 1s linear infinite'
               }}></div>
-              <span style={{ marginLeft: '8px' }}>Chargement de vos réclamations...</span>
+              <div style={{ padding: '1.5rem', width: '100%' }}>
+                <div className="skeleton skeleton-row"></div>
+                <div className="skeleton skeleton-row"></div>
+                <div className="skeleton skeleton-row"></div>
+              </div>
             </div>
           ) : errorMsg ? (
             <div style={{ padding: '3rem', textAlign: 'center', color: '#ef4444' }}>
@@ -181,8 +317,14 @@ const ClientReclamations = () => {
                         Vous n'avez déposé aucune réclamation pour le moment.
                       </td>
                     </tr>
+                  ) : filteredReclamations.length === 0 ? (
+                    <tr>
+                      <td colSpan="7" style={{ textAlign: 'center', color: '#94a3b8', padding: '3rem' }}>
+                        Aucune réclamation ne correspond à vos critères de recherche.
+                      </td>
+                    </tr>
                   ) : (
-                    reclamations.map((rec) => {
+                    filteredReclamations.map((rec) => {
                       const badgeInfo = getStatusBadge(rec.status);
                       const pBadge = getPriorityBadge(rec.priority);
                       return (
@@ -214,13 +356,24 @@ const ClientReclamations = () => {
                               {badgeInfo.label}
                             </span>
                           </td>
-                          <td>
-                            <button 
-                              className="client-btn-details"
-                              onClick={() => handleOpenDetailModal(rec)}
-                            >
-                              Voir le détail
-                            </button>
+                          <td style={{ position: 'relative' }}>
+                             <button 
+                               className="orders-action-btn"
+                               onClick={(e) => toggleDropdown(e, rec.id)}
+                               title="Actions"
+                             >
+                               &#8942;
+                             </button>
+                             {openDropdownId === rec.id && (
+                               <div className="orders-action-dropdown" onClick={(e) => e.stopPropagation()}>
+                                 <button 
+                                   onClick={() => { handleOpenDetailModal(rec); setOpenDropdownId(null); }} 
+                                   className="orders-dropdown-item"
+                                 >
+                                   Voir le détail
+                                 </button>
+                               </div>
+                             )}
                           </td>
                         </tr>
                       );

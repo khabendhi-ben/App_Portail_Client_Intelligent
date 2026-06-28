@@ -123,7 +123,11 @@ const AdminDashboard = () => {
           </div>
           <div className="ad-card-body">
             {loading ? (
-              <div className="ad-loading-placeholder">Chargement...</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem' }}>
+                <div className="skeleton skeleton-row"></div>
+                <div className="skeleton skeleton-row"></div>
+                <div className="skeleton skeleton-row"></div>
+              </div>
             ) : recentClients.length === 0 ? (
               <div className="ad-empty-state">Aucun client enregistré pour le moment.</div>
             ) : (
@@ -181,7 +185,11 @@ const AdminDashboard = () => {
             <h3>Distribution des Abonnements</h3>
             <div className="ad-sub-distribution">
               {loading ? (
-                <div className="ad-loading-placeholder">Chargement...</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem' }}>
+                  <div className="skeleton skeleton-row"></div>
+                  <div className="skeleton skeleton-row"></div>
+                  <div className="skeleton skeleton-row"></div>
+                </div>
               ) : totalClients === 0 ? (
                 <div className="ad-empty-state">Pas de données</div>
               ) : (
@@ -229,7 +237,11 @@ const AdminDashboard = () => {
             <h3>Demandes de réinitialisation</h3>
             <div className="ad-card-body">
               {loading ? (
-                <div className="ad-loading-placeholder">Chargement...</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', padding: '1rem' }}>
+                  <div className="skeleton skeleton-row"></div>
+                  <div className="skeleton skeleton-row"></div>
+                  <div className="skeleton skeleton-row"></div>
+                </div>
               ) : recentResets.length === 0 ? (
                 <div className="ad-empty-state-check">
                   <div className="check-icon">✓</div>

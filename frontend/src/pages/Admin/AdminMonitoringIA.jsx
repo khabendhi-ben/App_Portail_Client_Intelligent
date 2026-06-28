@@ -126,7 +126,11 @@ const AdminMonitoringIA = () => {
         {loading ? (
           <div className="monitoring-loading-state">
             <div className="spinner"></div>
-            <p>Chargement des conversations...</p>
+            <div style={{ padding: '1rem' }}>
+              <div className="skeleton skeleton-row"></div>
+              <div className="skeleton skeleton-row"></div>
+              <div className="skeleton skeleton-row"></div>
+            </div>
           </div>
         ) : conversations.length === 0 ? (
           <div className="monitoring-empty-state">
@@ -212,7 +216,10 @@ const AdminMonitoringIA = () => {
               {loadingMessages ? (
                 <div className="drawer-loading-state">
                   <div className="spinner"></div>
-                  <p>Chargement des messages...</p>
+                  <div style={{ padding: '1rem' }}>
+                    <div className="skeleton skeleton-row" style={{ height: '60px' }}></div>
+                    <div className="skeleton skeleton-row" style={{ height: '80px', width: '80%', alignSelf: 'flex-end' }}></div>
+                  </div>
                 </div>
               ) : messages.length === 0 ? (
                 <div className="drawer-empty-state">

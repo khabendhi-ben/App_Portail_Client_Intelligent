@@ -10,3 +10,72 @@ html, body {
   width: 100%;
   font-family: 'Inter', 'Segoe UI', sans-serif;
 }
+
+/* ==========================================================
+   UTILITIES : SPINNERS & SKELETONS
+========================================================== */
+
+/* Animation Shimmer pour Skeletons */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite linear;
+  border-radius: 4px;
+}
+
+/* Formats de Skeleton */
+.skeleton-text {
+  height: 1rem;
+  margin-bottom: 0.5rem;
+  width: 100%;
+}
+
+.skeleton-text-short {
+  height: 1rem;
+  margin-bottom: 0.5rem;
+  width: 60%;
+}
+
+.skeleton-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+}
+
+.skeleton-row {
+  height: 45px;
+  width: 100%;
+  margin-bottom: 8px;
+  border-radius: 6px;
+}
+
+/* Spinner classique (boutons, petits chargements) */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.spinner-teal {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(46, 107, 107, 0.2);
+  border-radius: 50%;
+  border-top-color: #2e6b6b;
+  animation: spin 1s ease-in-out infinite;
+}
+
+.spinner-teal-large {
+  width: 40px;
+  height: 40px;
+  border-width: 4px;
+}

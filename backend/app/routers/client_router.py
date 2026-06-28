@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 from typing import List
 
@@ -51,6 +51,7 @@ def get_all_clients(
 @router.post("/")
 def create_client(
     client_data: user_schema.ClientCreate,
+    request: Request,
     db: Session = Depends(database.get_db),
     current_user: user_model.User = Depends(
         security.require_roles([
@@ -88,6 +89,13 @@ def create_client(
         print(f"Erreur d'envoi de l'email de bienvenue: {e}")
 
     # Retourner les infos + le MDP généré (pour que l'Admin le communique)
+    user_crud.log_action(
+        db=db, action="CREATION_CLIENT",
+        user_id=current_user.id,
+        details=f"Nouveau client créé : {db_user.email} par {current_user.email}",
+        ip_address=request.client.host if request.client else "inconnu",
+        severity="INFO"
+    )
     return {
         "id": db_user.id,
         "nom": db_user.nom,
@@ -109,6 +117,7 @@ def create_client(
 def update_client(
     client_id: int,
     client_data: user_schema.ClientUpdate,
+    request: Request,
     db: Session = Depends(database.get_db),
     current_user: user_model.User = Depends(
         security.require_roles([
@@ -152,6 +161,7 @@ def update_client(
 @router.put("/{client_id}/reset-password")
 def reset_client_password(
     client_id: int,
+    request: Request,
     db: Session = Depends(database.get_db),
     current_user: user_model.User = Depends(
         security.require_roles([
@@ -179,6 +189,13 @@ def reset_client_password(
     except Exception as e:
         print(f"Erreur d'envoi de l'email au client: {e}")
 
+    user_crud.log_action(
+        db=db, action="RESET_MOT_DE_PASSE",
+        user_id=current_user.id,
+        details=f"MDP réinitialisé pour {target_user.email} par {current_user.email}",
+        ip_address=request.client.host if request.client else "inconnu",
+        severity="WARNING"
+    )
     return {
         "message": f"Mot de passe réinitialisé pour {target_user.email}",
         "new_password": new_password
@@ -192,6 +209,7 @@ def reset_client_password(
 @router.put("/{client_id}/deactivate")
 def deactivate_client(
     client_id: int,
+    request: Request,
     db: Session = Depends(database.get_db),
     current_user: user_model.User = Depends(
         security.require_roles([
@@ -203,6 +221,13 @@ def deactivate_client(
     user = user_crud.deactivate_user(db, client_id)
     if not user:
         raise HTTPException(status_code=404, detail="Client introuvable")
+    user_crud.log_action(
+        db=db, action="COMPTE_DESACTIVE",
+        user_id=current_user.id,
+        details=f"Client désactivé : {user.email} par {current_user.email}",
+        ip_address=request.client.host if request.client else "inconnu",
+        severity="WARNING"
+    )
     return {"message": "Client désactivé avec succès"}
 
 
@@ -213,6 +238,7 @@ def deactivate_client(
 @router.put("/{client_id}/activate")
 def activate_client(
     client_id: int,
+    request: Request,
     db: Session = Depends(database.get_db),
     current_user: user_model.User = Depends(
         security.require_roles([
@@ -226,6 +252,13 @@ def activate_client(
         raise HTTPException(status_code=404, detail="Client introuvable")
     target_user.is_active = True
     db.commit()
+    user_crud.log_action(
+        db=db, action="COMPTE_REACTIVE",
+        user_id=current_user.id,
+        details=f"Client réactivé : {target_user.email} par {current_user.email}",
+        ip_address=request.client.host if request.client else "inconnu",
+        severity="INFO"
+    )
     return {"message": "Client réactivé avec succès"}
 
 
@@ -236,6 +269,7 @@ def activate_client(
 @router.delete("/{client_id}")
 def delete_client(
     client_id: int,
+    request: Request,
     db: Session = Depends(database.get_db),
     current_user: user_model.User = Depends(
         security.require_roles([
@@ -244,17 +278,25 @@ def delete_client(
         ])
     )
 ):
+    # Récupérer l'email avant suppression
+    target = user_crud.get_user(db, client_id)
+    target_email = target.email if target else f"ID {client_id}"
     # Supprimer d'abord le profil client
     profile = user_crud.get_client_profile(db, client_id)
     if profile:
         db.delete(profile)
         db.commit()
-
     # Puis supprimer le user
     success = user_crud.delete_user(db, client_id)
     if not success:
         raise HTTPException(status_code=404, detail="Client introuvable")
-
+    user_crud.log_action(
+        db=db, action="SUPPRESSION_COMPTE",
+        user_id=current_user.id,
+        details=f"Client supprimé : {target_email} par {current_user.email}",
+        ip_address=request.client.host if request.client else "inconnu",
+        severity="WARNING"
+    )
     return {"message": "Client supprimé définitivement"}
 
 
@@ -283,12 +325,38 @@ def get_client_dashboard_stats(
         user_model.Claim.status != 'resolved'
     ).count()
 
+    claims_open_count = db.query(user_model.Claim).filter(
+        user_model.Claim.user_id == current_user.id,
+        user_model.Claim.status == 'open'
+    ).count()
+
+    claims_pending_count = db.query(user_model.Claim).filter(
+        user_model.Claim.user_id == current_user.id,
+        user_model.Claim.status == 'pending'
+    ).count()
+
+    claims_resolved_count = db.query(user_model.Claim).filter(
+        user_model.Claim.user_id == current_user.id,
+        user_model.Claim.status == 'resolved'
+    ).count()
+
+    # Calcul dynamique du budget total (somme des budgets de toutes les annonces du client)
+    from sqlalchemy import func
+    total_budget = db.query(func.sum(user_model.Announcement.budget)).filter(
+        user_model.Announcement.user_id == current_user.id
+    ).scalar() or 0.0
+
     return user_schema.ClientDashboardStats(
         nom=current_user.nom,
         email=current_user.email,
+        phone=current_user.phone,
+        address=profile.address,
         company_name=profile.company_name,
         subscription_type=profile.subscription_type,
-        budget=profile.budget or 0.0,
+        budget=float(total_budget),
         active_announcements_count=active_announcements_count,
-        open_claims_count=open_claims_count
+        open_claims_count=open_claims_count,
+        claims_open_count=claims_open_count,
+        claims_pending_count=claims_pending_count,
+        claims_resolved_count=claims_resolved_count
     )

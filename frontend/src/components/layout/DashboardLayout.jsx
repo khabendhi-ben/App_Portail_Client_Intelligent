@@ -45,7 +45,17 @@ const DashboardLayout = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [role]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // Appeler le backend pour journaliser la déconnexion
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      } catch (_) { /* silencieux si le serveur est inaccessible */ }
+    }
     localStorage.clear();
     window.location.href = '/';
   };
@@ -96,6 +106,26 @@ const DashboardLayout = () => {
       <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
       </svg>
+    ),
+    contact: (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+      </svg>
+    ),
+    profile: (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+    ),
+    logs: (
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+        <line x1="16" y1="13" x2="8" y2="13"></line>
+        <line x1="16" y1="17" x2="8" y2="17"></line>
+        <polyline points="10 9 9 9 8 9"></polyline>
+      </svg>
     )
   };
 
@@ -107,21 +137,26 @@ const DashboardLayout = () => {
           { id: '/superadmin/dashboard', label: 'Tableau de bord', icon: icons.dashboard, enabled: true },
           { id: '/superadmin/gestion-admins', label: 'Gestion des Admins', icon: icons.admins, enabled: true },
           { id: '/superadmin/gestion-clients', label: 'Gestion des Clients', icon: icons.clients, enabled: true },
-          { id: '/superadmin/statistiques', label: 'Statistiques Système', icon: icons.stats, enabled: true }
+          { id: '/superadmin/logs', label: 'Journaux système', icon: icons.logs, enabled: true },
+          { id: '/superadmin/config-llm', label: 'Configuration LLM', icon: icons.ai, enabled: true },
+          { id: '/superadmin/profil', label: 'Mon Profil', icon: icons.profile, enabled: true }
         ];
       case 'admin':
         return [
           { id: '/admin/dashboard', label: 'Tableau de bord', icon: icons.dashboard, enabled: true },
           { id: '/admin/gestion-clients', label: 'Gestion des Clients', icon: icons.clients, enabled: true },
           { id: '/admin/reclamations', label: 'Réclamations', icon: icons.claims, enabled: true },
-          { id: '/admin/monitoring-ia', label: 'Monitoring IA', icon: icons.ai, enabled: true }
+          { id: '/admin/monitoring-ia', label: 'Monitoring IA', icon: icons.ai, enabled: true },
+          { id: '/admin/profil', label: 'Mon Profil', icon: icons.profile, enabled: true }
         ];
       case 'client':
         return [
           { id: '/client/dashboard', label: 'Tableau de bord', icon: icons.dashboard, enabled: true },
           { id: '/client/announcements', label: 'Mes Annonces', icon: icons.announcements, enabled: true },
           { id: '/client/reclamations', label: 'Réclamations', icon: icons.claims, enabled: true },
-         { id: '/client/assistant', label: 'Assistant IA', icon: icons.ai, enabled: true, badge: '' }
+          { id: '/client/assistant', label: 'Assistant IA', icon: icons.ai, enabled: true, badge: '' },
+          { id: '/client/contact', label: 'Contact', icon: icons.contact, enabled: true },
+          { id: '/client/profil', label: 'Mon Profil', icon: icons.profile, enabled: true }
         ];
       default:
         return [];
@@ -150,32 +185,26 @@ const DashboardLayout = () => {
 
   if (loading) {
     return (
-      <div className="client-loading-container" style={{
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        minHeight: '100vh',
-        background: '#f8fafc',
-        gap: '16px',
-        color: '#475569',
-        fontFamily: 'sans-serif'
-      }}>
-        <div className="client-spinner" style={{
-          width: '40px',
-          height: '40px',
-          border: '3px solid #e2e8f0',
-          borderTop: '3px solid #2e6b6b',
-          borderRadius: '50%',
-          animation: 'client-spin 1s linear infinite'
-        }}></div>
-        <p>Chargement de votre espace...</p>
-        <style>{`
-          @keyframes client-spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
+      <div className="sa-layout">
+        {/* Skeleton Sidebar */}
+        <div className="sa-sidebar open" style={{ background: '#2e6b6b' }}>
+          <div className="sa-sidebar-header" style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}></div>
+          <div style={{ padding: '2rem 1rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <div className="skeleton skeleton-row" style={{ background: 'rgba(255,255,255,0.1)' }}></div>
+            <div className="skeleton skeleton-row" style={{ background: 'rgba(255,255,255,0.1)' }}></div>
+            <div className="skeleton skeleton-row" style={{ background: 'rgba(255,255,255,0.1)' }}></div>
+          </div>
+        </div>
+        {/* Skeleton Main Content */}
+        <div className="sa-main-content">
+          <div className="sa-header"></div>
+          <div style={{ padding: '2rem' }}>
+            <div className="skeleton skeleton-row"></div>
+            <div className="skeleton skeleton-row"></div>
+            <div className="skeleton skeleton-row"></div>
+            <div className="skeleton skeleton-row" style={{ height: '200px' }}></div>
+          </div>
+        </div>
       </div>
     );
   }
@@ -244,6 +273,14 @@ const DashboardLayout = () => {
         </button>
       </aside>
 
+      {/* OVERLAY POUR MOBILE */}
+      {isSidebarOpen && (
+        <div 
+          className="sa-sidebar-overlay" 
+          onClick={() => setIsSidebarOpen(false)}
+        ></div>
+      )}
+
       {/* MAIN CONTENT */}
       <main className="sa-main-content">
         {/* HEADER */}
@@ -256,10 +293,11 @@ const DashboardLayout = () => {
           </div>
           
           <div className="sa-header-right">
-            <div className="sa-user-dropdown-wrapper" ref={dropdownRef}>
+            <div className="sa-user-dropdown-wrapper">
               <button
                 className="sa-user-trigger"
-                onClick={() => setDropdownOpen(!dropdownOpen)}
+                onClick={handleLogout}
+                title="Déconnexion"
               >
                 <div className="sa-user-avatar">
                   {userData?.nom ? userData.nom.charAt(0).toUpperCase() : userData?.email?.charAt(0).toUpperCase()}
@@ -268,20 +306,14 @@ const DashboardLayout = () => {
                   <span className="sa-user-name">{userData?.nom || (role === 'client' ? 'Client' : 'Administrateur')}</span>
                   <span className="sa-user-role">{getDisplayRole()}</span>
                 </div>
-                <span className="sa-dropdown-arrow">{dropdownOpen ? '▲' : '▼'}</span>
+                <span className="sa-dropdown-arrow">
+                  <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                  </svg>
+                </span>
               </button>
-
-              {dropdownOpen && (
-                <div className="sa-dropdown-menu">
-                  <button className="sa-dropdown-item" onClick={() => { setDropdownOpen(false); navigate(`/${role}/profil`); }}>
-                    Mon Profil
-                  </button>
-                  <hr className="sa-dropdown-divider" />
-                  <button className="sa-dropdown-item logout" onClick={handleLogout}>
-                    ↪ Déconnexion
-                  </button>
-                </div>
-              )}
             </div>
           </div>
         </header>

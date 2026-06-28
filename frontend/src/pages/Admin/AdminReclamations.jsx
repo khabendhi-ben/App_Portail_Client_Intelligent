@@ -277,7 +277,11 @@ const AdminReclamations = () => {
               borderRadius: '50%',
               animation: 'client-spin 1s linear infinite'
             }}></div>
-            <span>Chargement des réclamations...</span>
+            <div style={{ padding: '1.5rem', width: '100%' }}>
+              <div className="skeleton skeleton-row"></div>
+              <div className="skeleton skeleton-row"></div>
+              <div className="skeleton skeleton-row"></div>
+            </div>
           </div>
         ) : filteredReclamations.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '3rem', color: '#94a3b8' }}>

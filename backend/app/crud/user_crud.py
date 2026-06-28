@@ -5,6 +5,9 @@
         
         
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
+from datetime import datetime, date
+from typing import Optional
 import app.models.user_model as user_model, app.schemas.user_schema as user_schema, app.core.security as security
 
 def get_user(db: Session, user_id: int):
@@ -126,9 +129,19 @@ def update_user(db: Session, user_id: int, user_data: user_schema.UserUpdate):
         return None
 
     update_dict = user_data.dict(exclude_unset=True)
-    if "password" in update_dict and update_dict["password"]:
-        db_user.hashed_password = security.get_password_hash(update_dict["password"])
+    if "password" in update_dict:
+        if update_dict["password"]:
+            db_user.hashed_password = security.get_password_hash(update_dict["password"])
         del update_dict["password"]
+
+    if "old_password" in update_dict:
+        del update_dict["old_password"]
+
+    if "address" in update_dict:
+        address_val = update_dict["address"]
+        if db_user.client_profile:
+            db_user.client_profile.address = address_val
+        del update_dict["address"]
 
     for key, value in update_dict.items():
         setattr(db_user, key, value)
@@ -211,3 +224,82 @@ def update_client_with_profile(db: Session, user_id: int, client_data: user_sche
         db.refresh(db_client)
 
     return db_user, db_client
+
+
+# ─── CRUD LOGS SYSTÈME ────────────────────────────────────────
+
+def log_action(
+    db: Session,
+    action: str,
+    user_id: Optional[int] = None,
+    details: Optional[str] = None,
+    ip_address: Optional[str] = None,
+    severity: str = "INFO"
+):
+    """
+    Enregistre un événement dans les journaux système.
+    - action : ex. 'CONNEXION_REUSSIE', 'ECHEC_CONNEXION', 'PROFIL_MAJ'
+    - severity : 'INFO', 'WARNING', 'ERROR'
+    - ip_address : adresse IP de la requête
+    """
+    log = user_model.SystemLog(
+        action=action,
+        user_id=user_id,
+        details=details,
+        ip_address=ip_address,
+        severity=severity
+    )
+    db.add(log)
+    db.commit()
+    return log
+
+
+def get_system_logs(
+    db: Session,
+    action_filter: Optional[str] = None,
+    user_email_filter: Optional[str] = None,
+    ip_filter: Optional[str] = None,
+    severity_filter: Optional[str] = None,
+    date_filter: Optional[str] = None,
+    limit: int = 100,
+    offset: int = 0
+):
+    """
+    Récupère les logs système avec des filtres optionnels.
+    Trie par date décroissante (les plus récents en premier).
+    """
+    query = db.query(user_model.SystemLog)
+
+    # Filtre par action (recherche partielle insensible à la casse)
+    if action_filter:
+        query = query.filter(user_model.SystemLog.action.ilike(f"%{action_filter}%"))
+
+    # Filtre par criticité
+    if severity_filter and severity_filter in ["INFO", "WARNING", "ERROR"]:
+        query = query.filter(user_model.SystemLog.severity == severity_filter)
+
+    # Filtre par adresse IP (recherche partielle)
+    if ip_filter:
+        query = query.filter(user_model.SystemLog.ip_address.ilike(f"%{ip_filter}%"))
+
+    # Filtre par date (journée complète)
+    if date_filter:
+        try:
+            target_date = datetime.strptime(date_filter, "%Y-%m-%d").date()
+            query = query.filter(
+                user_model.SystemLog.timestamp >= datetime.combine(target_date, datetime.min.time()),
+                user_model.SystemLog.timestamp < datetime.combine(target_date, datetime.max.time())
+            )
+        except ValueError:
+            pass
+
+    # Filtre par email utilisateur (nécessite une jointure avec UTILISATEURS)
+    if user_email_filter:
+        query = query.join(
+            user_model.User,
+            user_model.SystemLog.user_id == user_model.User.id,
+            isouter=True
+        ).filter(user_model.User.email.ilike(f"%{user_email_filter}%"))
+
+    logs = query.order_by(user_model.SystemLog.timestamp.desc()).offset(offset).limit(limit).all()
+    return logs

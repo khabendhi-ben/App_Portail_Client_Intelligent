@@ -140,7 +140,11 @@ class SystemLog(Base):
     action = Column(String, nullable=False)
     user_id = Column(Integer, ForeignKey("UTILISATEURS.id"), nullable=True)
     details = Column(Text)
+    ip_address = Column(String, nullable=True)
+    severity = Column(String, default="INFO") # INFO, WARNING, ERROR
     timestamp = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User")
 
 class ConfigurationLLM(Base):
     __tablename__ = "CONFIGURATION_LLM"

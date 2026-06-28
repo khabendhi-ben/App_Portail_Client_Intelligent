@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from datetime import timedelta
 from jose import JWTError, jwt
@@ -12,12 +12,23 @@ import app.core.database as database
 router = APIRouter(prefix="/auth", tags=["Authentification"])
 
 @router.post("/login", response_model=user_schema.Token)
-def login_for_access_token(user_credentials: user_schema.UserLogin, db: Session = Depends(database.get_db)):
+def login_for_access_token(
+    request: Request,
+    user_credentials: user_schema.UserLogin,
+    db: Session = Depends(database.get_db)
+):
     """Route pour se connecter et obtenir un Token JWT"""
     
     # 1. Vérifier si l'utilisateur existe
     user = user_crud.get_user_by_email(db, email=user_credentials.email)
     if not user:
+        # Log d'un échec de connexion (email inconnu) - WARNING
+        ip = request.client.host if request.client else "inconnu"
+        user_crud.log_action(
+            db=db, action="ECHEC_CONNEXION",
+            details=f"Tentative avec email inconnu: {user_credentials.email}",
+            ip_address=ip, severity="WARNING"
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email ou mot de passe incorrect",
@@ -26,6 +37,14 @@ def login_for_access_token(user_credentials: user_schema.UserLogin, db: Session 
     
     # 2. Vérifier le mot de passe
     if not security.verify_password(user_credentials.password, user.hashed_password):
+        # Log d'un échec de connexion (mauvais MDP) - WARNING
+        ip = request.client.host if request.client else "inconnu"
+        user_crud.log_action(
+            db=db, action="ECHEC_CONNEXION",
+            user_id=user.id,
+            details=f"Mot de passe incorrect pour: {user.email}",
+            ip_address=ip, severity="WARNING"
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Email ou mot de passe incorrect",
@@ -34,6 +53,13 @@ def login_for_access_token(user_credentials: user_schema.UserLogin, db: Session 
 
     # Vérifier si le compte est actif
     if not user.is_active:
+        ip = request.client.host if request.client else "inconnu"
+        user_crud.log_action(
+            db=db, action="CONNEXION_COMPTE_BLOQUE",
+            user_id=user.id,
+            details=f"Tentative de connexion sur compte bloqué: {user.email}",
+            ip_address=ip, severity="WARNING"
+        )
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Votre compte a été désactivé. Veuillez contacter l'administrateur.",
@@ -45,8 +71,38 @@ def login_for_access_token(user_credentials: user_schema.UserLogin, db: Session 
         data={"sub": user.email, "role": user.role}, 
         expires_delta=access_token_expires
     )
-    
+
+    # Log de la connexion réussie - INFO
+    ip = request.client.host if request.client else "inconnu"
+    user_crud.log_action(
+        db=db, action="CONNEXION_REUSSIE",
+        user_id=user.id,
+        details=f"Connexion réussie pour: {user.email}",
+        ip_address=ip, severity="INFO"
+    )
+
     return {"access_token": access_token, "token_type": "bearer", "role": user.role, "must_change_password": user.must_change_password}
+
+
+@router.post("/logout")
+def logout(
+    request: Request,
+    db: Session = Depends(database.get_db),
+    current_user: user_model.User = Depends(security.get_current_user)
+):
+    """Déconnexion — enregistre un log DECONNEXION puis invalide la session côté client"""
+    ip = request.client.host if request.client else "inconnu"
+    user_crud.log_action(
+        db=db,
+        action="DECONNEXION",
+        user_id=current_user.id,
+        details=f"Déconnexion de : {current_user.email}",
+        ip_address=ip,
+        severity="INFO"
+    )
+    return {"message": "Déconnexion enregistrée avec succès"}
+
+
 
 @router.post("/forgot-password")
 def request_password_reset(
@@ -54,6 +110,7 @@ def request_password_reset(
     db: Session = Depends(database.get_db)
 ):
     """L'utilisateur demande une réinitialisation"""
+
 
     user = user_crud.get_user_by_email(db, email=data.email)
 

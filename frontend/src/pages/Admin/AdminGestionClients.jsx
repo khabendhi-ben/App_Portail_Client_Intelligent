@@ -388,7 +388,11 @@ const AdminGestionClients = () => {
       <div className="sa-card">
         {activeTab === 'list' ? (
           loading ? (
-            <p style={{ color: '#94a3b8', padding: '1rem' }}>Chargement...</p>
+            <div style={{ padding: '1.5rem' }}>
+              <div className="skeleton skeleton-row"></div>
+              <div className="skeleton skeleton-row"></div>
+              <div className="skeleton skeleton-row"></div>
+            </div>
           ) : (
           <div style={{ overflowX: 'auto', width: '100%' }}>
             <table className="sa-table">
@@ -479,7 +483,11 @@ const AdminGestionClients = () => {
         )
       ) : (
         requestsLoading ? (
-          <p style={{ color: '#94a3b8', padding: '1rem' }}>Chargement des demandes...</p>
+          <div style={{ padding: '1.5rem' }}>
+            <div className="skeleton skeleton-row"></div>
+            <div className="skeleton skeleton-row"></div>
+            <div className="skeleton skeleton-row"></div>
+          </div>
         ) : (
           <div style={{ overflowX: 'auto', width: '100%' }}>
             <table className="sa-table">

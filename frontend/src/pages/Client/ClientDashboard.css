@@ -196,11 +196,11 @@
 
 /* Body Content Styling */
 .client-body-content {
-  padding: 2rem;
+  padding: 1.5rem;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: 1.25rem;
 }
 
 /* Welcome Card Styling */
@@ -1185,6 +1185,202 @@
   padding: 0;
 }
 
+.orders-table th {
+  background: transparent;
+  color: #1e293b;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.75rem;
+  border-bottom: 1px solid #cbd5e1;
+}
+
+.orders-table td {
+  padding: 1rem 0.75rem;
+  border-bottom: 1px solid #e2e8f0;
+  color: #334155;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.orders-table td.ann-title,
+.client-table td.claim-subject {
+  white-space: normal;
+}
+
+.orders-table tr:hover td {
+  background: #f8fafc;
+}
+
+.orders-ref-text {
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.orders-support-text {
+  text-transform: uppercase;
+}
+
+.orders-type-text {
+  text-transform: uppercase;
+}
+
+/* Status Badges */
+.orders-status-badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 4px; /* Slight rounded corners as in mockup */
+  text-align: center;
+  white-space: nowrap;
+}
+
+.orders-status-badge.rejected {
+  background: #ef4444; /* Solid red */
+  color: #ffffff;
+}
+
+.orders-status-badge.pending {
+  background: #a5f3fc; /* Cyan */
+  color: #0891b2;
+}
+
+.orders-status-badge.active {
+  background: #bbf7d0; /* Green */
+  color: #15803d;
+}
+
+.orders-status-badge.archived {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.orders-action-btn {
+  background: #ffffff;
+  border: 1px solid #e2e8f0; /* Fines bordures grises comme sur la photo */
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  color: #475569; /* Couleur ardoise des trois points verticaux */
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  line-height: 1;
+}
+
+.orders-action-btn:hover {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #cbd5e1;
+}
+
+.orders-action-dropdown {
+  position: absolute;
+  right: 0.75rem;
+  top: 70%;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  z-index: 50;
+  min-width: 160px;
+  display: flex;
+  flex-direction: column;
+  padding: 6px;
+}
+
+.orders-dropdown-item {
+  background: none;
+  border: none;
+  padding: 10px 15px;
+  font-size: 0.92rem;
+  text-align: left;
+  cursor: pointer;
+  color: #334155;
+  font-weight: 500;
+  border-radius: 6px;
+  width: 100%;
+  font-family: inherit;
+  transition: all 0.15s ease;
+}
+
+.orders-dropdown-item:hover {
+  background-color: #f1f5f9;
+  color: #0f172a;
+}
+
+.orders-dropdown-item.claim {
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.orders-dropdown-item.claim:hover {
+  background-color: #fef2f2;
+  color: #b91c1c;
+}
+
+/* Pagination */
+.orders-pagination-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+}
+
+.orders-btn-suivant {
+  border: 1px solid #d4b285;
+  color: #d4b285;
+  background: transparent;
+  padding: 8px 28px;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+
+.orders-btn-suivant:hover:not(:disabled) {
+  background: #fdfbf7;
+  color: #c59b68;
+  border-color: #c59b68;
+}
+
+.orders-btn-suivant:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Export Button */
+.orders-export-container {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  padding-right: 0.5rem;
+}
+
+.orders-btn-export {
+  background: transparent;
+  border: none;
+  color: #bfa276;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.2s;
+  padding: 0;
+}
+
 .orders-btn-export:hover {
   color: #a6895c;
 }
@@ -1194,4 +1390,557 @@
 
 .orders-dropdown-item.claim:hover {
   background-color: #fef2f2 !important;
+}
+
+/* =========================================
+   NOUVEAU DESIGN : BANNIÈRE BIENVENUE 
+   ========================================= */
+
+/* BANNIÈRE BIENVENUE ÉPURÉE */
+.dashboard-welcome-banner {
+  display: flex;
+  align-items: center;
+  background-color: #f8fafc; /* Couleur d'arrière-plan gris/bleu ultra subtile et sobre */
+  padding: 24px 32px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0; /* Bordure grise standard très propre */
+  border-left: 5px solid #2e6b6b; /* Ligne d'accentuation verte aux couleurs du site */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
+  margin-bottom: 0; /* Distance réduite entre la bannière et les KPI cards */
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.welcome-left-section {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+/* AVATAR AVEC ORBITE ET POINT VERT (DÉCORATION DE LA PHOTO) */
+.welcome-avatar-wrapper {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.avatar-orbit-ring {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  border: 1px solid rgba(46, 107, 107, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: flex-start; /* Place le point sur le bord gauche */
+  box-sizing: border-box;
+}
+
+.orbit-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #00c853; /* Point vert vif */
+  border-radius: 50%;
+  margin-left: -4px; /* Centre le point sur la ligne de l'orbite */
+}
+
+.welcome-avatar {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #2e6b6b; /* Vert canard solide */
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  z-index: 2;
+  border: 4px solid #ffffff; /* Bordure blanche épaisse comme sur la photo */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.06);
+}
+
+/* TEXTES D'ACCUEIL */
+.welcome-text-container {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+
+.welcome-title {
+  margin: 0 0 6px 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1a253c; /* Titre bleu nuit/ardoise foncé */
+  line-height: 1.2;
+}
+
+.welcome-subtitle {
+  margin: 0 0 4px 0;
+  font-size: 0.95rem;
+  color: #64748b; /* Sous-titre gris ardoise */
+  font-weight: 500;
+}
+
+.welcome-activity-text {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #1e5e5e; /* Texte vert */
+  font-weight: 600;
+}
+
+/* GRILLE DES KPI CARDS EN BAS (3 COLONNES PLEINE LARGEUR) */
+.client-kpi-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 3 cartes côte à côte */
+  gap: 20px;
+  margin-bottom: 0;
+}
+
+.kpi-card-modern {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  position: relative;
+  min-height: 165px;
+  box-sizing: border-box;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.kpi-card-modern.clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  cursor: pointer;
+}
+
+.kpi-icon-box {
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  flex-shrink: 0;
+}
+
+.kpi-icon-box.bg-green { background-color: #00c853; }
+.kpi-icon-box.bg-blue { background-color: #2979ff; }
+.kpi-icon-box.bg-orange { background-color: #ff6d00; }
+.kpi-icon-box.bg-purple { background-color: #a855f7; }
+
+.kpi-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 14px;
+  text-align: left;
+}
+
+.kpi-card-label {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.kpi-card-value {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1;
+}
+
+/* BOUTONS PILLS EN BAS À DROITE - DESIGN PREMIUM UNIFIÉ */
+.kpi-card-link {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  padding: 6px 14px;
+  border-radius: 20px; /* Forme pilule arrondie et moderne */
+  font-size: 0.78rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  background-color: #e8f5f3; /* Fond pastel vert d'eau lumineux */
+  color: #2e6b6b; /* Vert identitaire de l'app */
+  border: 1px solid rgba(46, 107, 107, 0.15); /* Bordure discrète */
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.kpi-card-modern:hover .kpi-card-link {
+  background-color: #2e6b6b; /* Remplissage couleur de marque au survol */
+  color: #ffffff; /* Texte devient blanc */
+  border-color: #2e6b6b;
+  box-shadow: 0 4px 12px rgba(46, 107, 107, 0.25); /* Ombre portée lumineuse verte */
+}
+
+/* Badge de pourcentage (Budget) */
+.kpi-card-badge {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.kpi-card-badge.bg-green-pill {
+  background-color: #ecfdf5;
+  color: #00c853;
+}
+
+.arrow-symbol {
+  transition: transform 0.2s ease;
+}
+
+.kpi-card-modern:hover .arrow-symbol {
+  transform: translateX(3px);
+}
+
+/* =========================================
+   RANGÉE DU BAS & ACTIONS RAPIDES
+   ========================================= */
+
+.dashboard-bottom-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+  margin-top: 0;
+}
+
+.dashboard-widget-card {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.widget-header {
+  margin-bottom: 20px;
+}
+
+.widget-header-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #1e293b;
+}
+
+.widget-header-icon {
+  color: #2e6b6b; /* Accent brand color */
+}
+
+.widget-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.actions-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.action-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 8px;
+  border-bottom: 1px solid #f1f5f9;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-radius: 8px;
+}
+
+.action-row:last-child {
+  border-bottom: none;
+}
+
+.action-row:hover {
+  background-color: #f8fafc;
+  padding-left: 12px;
+  padding-right: 4px;
+}
+
+.action-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.action-icon-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Couleurs claires pour les icônes d'action */
+.action-icon-circle.bg-green-light { background-color: #ecfdf5; }
+.action-icon-circle.bg-blue-light { background-color: #eff6ff; }
+.action-icon-circle.bg-orange-light { background-color: #fff7ed; }
+.action-icon-circle.bg-teal-light { background-color: #f0fdfa; }
+.action-icon-circle.bg-purple-light { background-color: #faf5ff; }
+
+.action-label-text {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.action-chevron {
+  color: #94a3b8;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.action-row:hover .action-chevron {
+  color: #1e293b;
+  transform: translateX(2px);
+}
+
+/* RESPONSIVE FOR KPI */
+@media (max-width: 1024px) {
+  .client-kpi-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .client-kpi-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* BOUTON RÉINITIALISER POUR LES FILTRES */
+.orders-reset-btn {
+  background: #ffffff;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  height: 38px;
+  padding: 0 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.orders-reset-btn:hover {
+  background: #f8fafc;
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
+/* ANIMATION ORBITE DE L'AVATAR */
+@keyframes orbit-spin-clockwise {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* COMPORTEMENT RESPONSIVE POUR LA DISPOSITION CÔTE À CÔTE */
+@media (max-width: 1024px) {
+  .dashboard-header-row {
+    flex-direction: column;
+  }
+  .client-kpi-cards-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .client-kpi-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* WIDGET : STATUT DES RÉCLAMATIONS */
+.claims-status-card {
+  display: flex;
+  flex-direction: column;
+}
+
+.claims-dashboard-split {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  margin-top: 12px;
+  flex-grow: 1;
+}
+
+.claims-dashboard-donut-wrapper {
+  flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+}
+
+.donut-chart-circle {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease;
+}
+
+.donut-chart-circle:hover {
+  transform: rotate(15deg);
+}
+
+.donut-chart-inner {
+  width: 106px;
+  height: 106px;
+  border-radius: 50%;
+  background-color: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.04);
+}
+
+.donut-chart-total {
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.1;
+}
+
+.donut-chart-label {
+  font-size: 0.8rem;
+  color: #64748b;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.claims-dashboard-list {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.claims-dashboard-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background-color: #f8fafc;
+  border: 1px solid #f1f5f9;
+  border-radius: 12px;
+  padding: 12px 20px;
+  transition: all 0.2s ease;
+}
+
+.claims-dashboard-item:hover {
+  background-color: #f1f5f9;
+  transform: translateY(-1px);
+}
+
+.claims-item-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.claims-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.claims-dot.open {
+  background-color: #ef4444;
+}
+
+.claims-dot.pending {
+  background-color: #f59e0b;
+}
+
+.claims-dot.resolved {
+  background-color: #10b981;
+}
+
+.claims-count {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #0f172a;
+  min-width: 20px;
+}
+
+.claims-label {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: #64748b;
+}
+
+.claims-pct {
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.claims-pct.open {
+  color: #ef4444;
+}
+
+.claims-pct.pending {
+  color: #f59e0b;
+}
+
+.claims-pct.resolved {
+  color: #10b981;
+}
+
+.claims-dashboard-footer {
+  margin-top: auto;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 16px;
+}
+
+.claims-footer-link {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #2e6b6b;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.claims-footer-link:hover {
+  color: #245858;
+  text-decoration: underline;
+}
+
+@media (max-width: 1200px) {
+  .claims-dashboard-split {
+    flex-direction: column;
+    gap: 20px;
+  }
 }

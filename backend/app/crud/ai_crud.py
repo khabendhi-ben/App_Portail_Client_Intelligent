@@ -1,12 +1,37 @@
 from sqlalchemy.orm import Session
 import app.models.user_model as user_model
 
+from app.core.crypto import encrypt_value, decrypt_value
+
 def get_llm_config(db: Session, key_name: str) -> str:
     """Récupère une valeur de configuration (ex: clé API, modèle)"""
     config = db.query(user_model.ConfigurationLLM).filter(
         user_model.ConfigurationLLM.key_name == key_name
     ).first()
-    return config.value if config else None
+    if not config:
+        return None
+    # On déchiffre la clé API
+    if key_name == "llm_api_key":
+        return decrypt_value(config.value)
+    return config.value
+
+def update_llm_config(db: Session, key_name: str, value: str):
+    """Met à jour ou insère une valeur de configuration"""
+    # On chiffre la clé API avant stockage
+    value_to_store = encrypt_value(value) if key_name == "llm_api_key" else value
+
+    config = db.query(user_model.ConfigurationLLM).filter(
+        user_model.ConfigurationLLM.key_name == key_name
+    ).first()
+    
+    if config:
+        config.value = value_to_store
+    else:
+        config = user_model.ConfigurationLLM(key_name=key_name, value=value_to_store)
+        db.add(config)
+    db.commit()
+    db.refresh(config)
+    return config
 
 def get_user_conversations(db: Session, user_id: int):
     """Récupère toutes les conversations d'un client ordonnées par date"""

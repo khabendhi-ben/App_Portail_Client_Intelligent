@@ -73,6 +73,8 @@ class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
     phone: Optional[str] = None
     password: Optional[str] = None
+    old_password: Optional[str] = None
+    address: Optional[str] = None
     role: Optional[UserRole] = None
     is_active: Optional[bool] = None
 
@@ -119,11 +121,30 @@ class ClientResponse(BaseModel):
 class ClientDashboardStats(BaseModel):
     nom: Optional[str] = None
     email: str
+    phone: Optional[str] = None
+    address: Optional[str] = None
     company_name: Optional[str] = None
     subscription_type: Optional[str] = None
     budget: float
     active_announcements_count: int
     open_claims_count: int
+    claims_open_count: int
+    claims_pending_count: int
+    claims_resolved_count: int
+
+
+class SystemLogResponse(BaseModel):
+    id: int
+    action: str
+    details: Optional[str] = None
+    ip_address: Optional[str] = None
+    severity: str
+    timestamp: datetime
+    user_email: Optional[str] = None
+    user_nom: Optional[str] = None
+
+    class Config:
+        from_attributes = True
 
 
 

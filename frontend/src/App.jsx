@@ -13,6 +13,7 @@ import SuperAdminDashboard from './pages/SuperAdmin/SuperAdminDashboard';
 import SuperAdminProfil from './pages/SuperAdmin/SuperAdminProfil';
 import SuperAdminGestionAdmins from './pages/SuperAdmin/SuperAdminGestionAdmins';
 import SuperAdminGestionClients from './pages/SuperAdmin/SuperAdminGestionClients';
+import SuperAdminLLMConfig from './pages/SuperAdmin/SuperAdminLLMConfig';
 
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import AdminGestionClients from './pages/Admin/AdminGestionClients';
@@ -21,7 +22,7 @@ import AdminProfil from './pages/Admin/AdminProfil';
 import ProtectedRoute from "./components/ProtectedRoute";
 
 import AdminMonitoringIA from "./pages/Admin/AdminMonitoringIA";
-import Statistiques from "./pages/SuperAdmin/Statistiques";
+import SuperAdminLogs from "./pages/SuperAdmin/SuperAdminLogs";
 
 import ClientDashboard from './pages/Client/ClientDashboard';
 import ClientAnnouncements from './pages/Client/ClientAnnouncements';
@@ -29,6 +30,7 @@ import ClientProfil from './pages/Client/ClientProfil';
 import ClientReclamations from './pages/Client/ClientReclamations';
 import AdminReclamations from './pages/Admin/AdminReclamations';
 import ClientAssistant from './pages/Client/ClientAssistant';
+import ClientContact from './pages/Client/ClientContact';
 
 function App() {
   const [showWarnModal, setShowWarnModal] = useState(false);
@@ -42,7 +44,16 @@ function App() {
     clearTimeout(warnTimeoutRef.current);
     clearTimeout(logoutTimeoutRef.current);
     clearInterval(countdownIntervalRef.current);
-    
+
+    // Journaliser la déconnexion (fire-and-forget — session expirée)
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      }).catch(() => { /* silencieux */ });
+    }
+
     localStorage.setItem('session_expired', 'true');
     localStorage.removeItem('token');
     localStorage.removeItem('role');
@@ -129,7 +140,8 @@ function App() {
           <Route path="profil" element={<SuperAdminProfil />} />
           <Route path="gestion-admins" element={<SuperAdminGestionAdmins />} />
           <Route path="gestion-clients" element={<SuperAdminGestionClients />} />
-          <Route path="statistiques" element={<Statistiques />} />
+          <Route path="logs" element={<SuperAdminLogs />} />
+          <Route path="config-llm" element={<SuperAdminLLMConfig />} />
         </Route>
 
         {/* ═══ Espace Admin ═══ */}
@@ -157,7 +169,8 @@ function App() {
   <Route path="announcements" element={<ClientAnnouncements />} />
   <Route path="reclamations" element={<ClientReclamations />} />
   <Route path="profil" element={<ClientProfil />} />
-  <Route path="assistant" element={<ClientAssistant />} /> {/* AJOUTER CETTE LIGNE */}
+  <Route path="assistant" element={<ClientAssistant />} />
+  <Route path="contact" element={<ClientContact />} />
 </Route>
 
         {/* Redirection fallback */}

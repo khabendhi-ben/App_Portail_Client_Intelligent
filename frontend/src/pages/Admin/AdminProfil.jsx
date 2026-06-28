@@ -72,8 +72,17 @@ const AdminProfil = () => {
 
   if (loading) {
     return (
-      <div className="sa-profil-content" style={{ padding: '2rem', color: '#64748b' }}>
-        Chargement de vos informations...
+      <div className="sa-profil-content" style={{ padding: '2rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem', marginBottom: '2rem' }}>
+          <div className="skeleton skeleton-avatar" style={{ width: '80px', height: '80px' }}></div>
+          <div style={{ flex: 1 }}>
+            <div className="skeleton skeleton-text" style={{ width: '40%', height: '24px' }}></div>
+            <div className="skeleton skeleton-text-short"></div>
+          </div>
+        </div>
+        <div className="skeleton skeleton-row"></div>
+        <div className="skeleton skeleton-row"></div>
+        <div className="skeleton skeleton-row"></div>
       </div>
     );
   }

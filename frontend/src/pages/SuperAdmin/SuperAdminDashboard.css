@@ -5,74 +5,148 @@
   gap: 1.5rem;
 }
 
-/* ===== STAT CARDS ===== */
+/* ===== STAT CARDS (Image Matching) ===== */
 .sa-stats-row {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 1.2rem;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1.5rem;
 }
 
 .sa-stat-card {
   background: white;
   border-radius: 8px;
-  padding: 1.2rem 1.25rem;
+  padding: 1.5rem;
   display: flex;
-  align-items: center;
-  gap: 1rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-  border: 1px solid #e9ecef;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.2rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+  border: 1px solid #f1f5f9;
 }
 
 .sa-stat-icon {
-  width: 44px;
-  height: 44px;
-  border-radius: 8px;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.2rem;
+  color: white;
   flex-shrink: 0;
 }
 
-.sa-stat-icon.purple { background: #ede9fe; }
-.sa-stat-icon.blue   { background: #dbeafe; }
-.sa-stat-icon.green  { background: #d1fae5; }
-.sa-stat-icon.orange { background: #ffedd5; }
+.sa-stat-icon svg {
+  width: 24px;
+  height: 24px;
+}
+
+.sa-stat-icon.blue   { background: #e0f2fe; color: #0284c7; } 
+.sa-stat-icon.green  { background: #dcfce3; color: #16a34a; } 
+.sa-stat-icon.orange { background: #fef3c7; color: #d97706; } 
+.sa-stat-icon.purple { background: #f3e8ff; color: #9333ea; } 
+.sa-stat-icon.indigo { background: #e0e7ff; color: #4f46e5; }
+
+.sa-stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
 
 .sa-stat-label {
-  font-size: 0.75rem;
+  font-size: 0.9rem;
   color: #64748b;
-  margin-bottom: 4px;
   font-weight: 500;
+  margin: 0;
 }
 
 .sa-stat-value {
-  font-size: 1.5rem;
-  font-weight: 800;
+  font-size: 2.2rem;
+  font-weight: 600;
   color: #0f172a;
-  line-height: 1;
+  line-height: 1.1;
+  margin: 0;
 }
 
-/* ===== BOTTOM ROW ===== */
-.sa-bottom-row {
+/* ===== CHART ROW ===== */
+.sa-charts-row {
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: 1.5rem;
 }
 
-.sa-card {
+.sa-chart-card {
   background: white;
   border-radius: 8px;
   padding: 1.5rem;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-  border: 1px solid #e9ecef;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 1px 2px rgba(0,0,0,0.03);
+  border: 1px solid #f1f5f9;
 }
 
-.sa-card-title {
-  font-size: 0.95rem;
-  font-weight: 700;
+.sa-chart-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1.5rem;
+}
+
+.sa-chart-title {
+  font-size: 1rem;
+  font-weight: 600;
   color: #1e293b;
-  margin-bottom: 1.25rem;
+  margin: 0 0 0.25rem 0;
+}
+
+.sa-chart-subtitle {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin: 0;
+}
+
+.sa-chart-legend {
+  display: flex;
+  gap: 1rem;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.sa-chart-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sa-legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.llm-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  background: #ecfdf5;
+  color: #059669;
+}
+
+.llm-badge.offline {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+}
+
+.llm-badge.offline .pulse-dot {
+  background: #ef4444;
 }
 
 /* ===== TABLE ===== */

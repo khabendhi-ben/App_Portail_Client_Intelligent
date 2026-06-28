@@ -286,3 +286,44 @@
   max-width: 80%;
   margin-top: 8px;
 }
+
+/* SUGGESTIONS AUTOMATIQUES */
+.chat-suggestions-container {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.suggestions-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-left: 2px;
+}
+
+.suggestions-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.btn-chat-suggestion {
+  padding: 6px 12px;
+  background: #ffffff;
+  color: #2e6b6b;
+  border: 1px solid #2e6b6b;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-chat-suggestion:hover {
+  background: #2e6b6b;
+  color: #ffffff;
+}

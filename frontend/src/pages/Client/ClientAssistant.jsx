@@ -48,11 +48,12 @@ const ClientAssistant = () => {
     setMessages([]);
   };
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!inputMessage.trim() || isLoading) return;
+  const handleSendMessage = async (e, textOverride = null) => {
+    if (e) e.preventDefault();
+    const textToSend = textOverride || inputMessage;
+    if (!textToSend.trim() || isLoading) return;
 
-    const userText = inputMessage;
+    const userText = textToSend;
     setInputMessage('');
 
     const newUserMessage = { id: Date.now(), sender: 'user', content: userText };
@@ -104,10 +105,22 @@ const ClientAssistant = () => {
             firstChunk = false;
           }
 
+          let textToRender = accumulatedText;
+          let parsedSuggestions = null;
+          if (accumulatedText.includes('__SUGGESTIONS__')) {
+            const parts = accumulatedText.split('__SUGGESTIONS__');
+            textToRender = parts[0];
+            try {
+              parsedSuggestions = JSON.parse(parts[1]);
+            } catch (err) {
+              // json in progress
+            }
+          }
+
           // Mettre à jour le message de l'assistant en temps réel
           setMessages(prev => prev.map(msg => {
             if (msg.id === aiMessageId) {
-              return { ...msg, content: accumulatedText };
+              return { ...msg, content: textToRender, suggestions: parsedSuggestions };
             }
             return msg;
           }));
@@ -121,9 +134,16 @@ const ClientAssistant = () => {
       } else if (activeConvId) {
         setConversations(prev => prev.map(c => {
           if (c.id === activeConvId) {
+            let textToRender = accumulatedText;
+            let parsedSuggestions = null;
+            if (accumulatedText.includes('__SUGGESTIONS__')) {
+              const parts = accumulatedText.split('__SUGGESTIONS__');
+              textToRender = parts[0];
+              try { parsedSuggestions = JSON.parse(parts[1]); } catch (err) {}
+            }
             return {
               ...c,
-              messages: [...(c.messages || []), newUserMessage, { id: aiMessageId, sender: 'assistant', content: accumulatedText }]
+              messages: [...(c.messages || []), newUserMessage, { id: aiMessageId, sender: 'assistant', content: textToRender, suggestions: parsedSuggestions }]
             };
           }
           return c;
@@ -229,6 +249,20 @@ const ClientAssistant = () => {
                   <span className="message-time">
                     {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'}) : new Date().toLocaleTimeString('fr-FR', {hour: '2-digit', minute:'2-digit'})}
                   </span>
+                  
+                  {/* Suggestions Automatiques */}
+                  {msg.suggestions && msg.suggestions.length > 0 && (
+                    <div className="chat-suggestions-container">
+                      <span className="suggestions-title">Sujets associés :</span>
+                      <div className="suggestions-buttons">
+                        {msg.suggestions.map((sug, idx) => (
+                          <button key={idx} className="btn-chat-suggestion" onClick={() => handleSendMessage(null, sug)}>
+                            {sug}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             ))

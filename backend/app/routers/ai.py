@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
 import httpx # Nécessaire pour faire des appels HTTP asynchrones vers Mistral
+import app.crud.user_crud as user_crud
 
 import app.models.user_model as user_model
 import app.schemas.ai_schema as ai_schema
@@ -60,10 +61,78 @@ def read_admin_conversation_messages(
         raise HTTPException(status_code=404, detail="Conversation introuvable")
     return conversation.messages
 
+# 1C. Configuration LLM (Réservé au SuperAdmin)
+@router.get("/superadmin/config", response_model=ai_schema.LLMConfigResponse)
+def get_llm_config_admin(
+    db: Session = Depends(database.get_db),
+    current_user: user_model.User = Depends(
+        security.require_roles([user_model.UserRole.SUPERADMIN])
+    )
+):
+    return ai_schema.LLMConfigResponse(
+        llm_endpoint=ai_crud.get_llm_config(db, "llm_endpoint") or "",
+        llm_api_key=ai_crud.get_llm_config(db, "llm_api_key") or "",
+        llm_model=ai_crud.get_llm_config(db, "llm_model") or "",
+        llm_system_prompt=ai_crud.get_llm_config(db, "llm_system_prompt") or ""
+    )
+
+@router.put("/superadmin/config")
+def update_llm_config_admin(
+    config: ai_schema.LLMConfigUpdate,
+    db: Session = Depends(database.get_db),
+    current_user: user_model.User = Depends(
+        security.require_roles([user_model.UserRole.SUPERADMIN])
+    )
+):
+    ai_crud.update_llm_config(db, "llm_endpoint", config.llm_endpoint)
+    ai_crud.update_llm_config(db, "llm_api_key", config.llm_api_key)
+    ai_crud.update_llm_config(db, "llm_model", config.llm_model)
+    ai_crud.update_llm_config(db, "llm_system_prompt", config.llm_system_prompt)
+    
+    # Log de l'action sensible
+    user_crud.log_action(
+        db=db, action="CONFIG_LLM_UPDATE",
+        user_id=current_user.id,
+        details="Le SuperAdmin a mis à jour la configuration du modèle LLM.",
+        ip_address="0.0.0.0"
+    )
+    return {"status": "success", "message": "Configuration LLM mise à jour"}
+
+@router.post("/superadmin/test-config")
+async def test_llm_config(
+    config: ai_schema.LLMConfigUpdate,
+    current_user: user_model.User = Depends(
+        security.require_roles([user_model.UserRole.SUPERADMIN])
+    )
+):
+    headers = {
+        "Authorization": f"Bearer {config.llm_api_key}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": config.llm_model,
+        "messages": [
+            {"role": "system", "content": config.llm_system_prompt},
+            {"role": "user", "content": "Ceci est un test de connexion. Réponds simplement 'OK'."}
+        ],
+        "max_tokens": 10,
+        "temperature": 0.3
+    }
+    try:
+        async with httpx.AsyncClient() as client:
+            response = await client.post(config.llm_endpoint, json=payload, headers=headers, timeout=10.0)
+            if response.status_code == 200:
+                return {"status": "success", "message": "Connexion LLM réussie !"}
+            else:
+                raise HTTPException(status_code=400, detail=f"Erreur API ({response.status_code}): {response.text}")
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Erreur de connexion: {str(e)}")
+
 # 2. Endpoint principal de discussion
 @router.post("/chat", response_model=ai_schema.AIChatResponse)
 async def chat_with_assistant(
     request_data: ai_schema.AIChatRequest,
+    request: Request,
     db: Session = Depends(database.get_db),
     current_user: user_model.User = Depends(
         security.require_roles([user_model.UserRole.CLIENT])
@@ -143,16 +212,41 @@ async def chat_with_assistant(
             response = await client.post(api_url, json=payload, headers=headers, timeout=30.0)
             
             if response.status_code != 200:
+                user_crud.log_action(
+                    db=db, action="ERREUR_LLM",
+                    user_id=current_user.id,
+                    details=f"Erreur Mistral (HTTP {response.status_code}) pour {current_user.email}",
+                    ip_address=request.client.host if request.client else "inconnu",
+                    severity="ERROR"
+                )
                 raise HTTPException(status_code=502, detail="Erreur de communication avec le modèle Mistral d'entreprise")
             
             result = response.json()
             ai_reply = result["choices"][0]["message"]["content"]
+    except HTTPException:
+        raise
     except Exception as e:
-        # En cas de problème réseau avec Mistral, on renvoie une réponse sécurisée
+        # En cas de problème réseau avec Mistral
+        user_crud.log_action(
+            db=db, action="ERREUR_LLM",
+            user_id=current_user.id,
+            details=f"Exception LLM pour {current_user.email} : {str(e)[:120]}",
+            ip_address=request.client.host if request.client else "inconnu",
+            severity="ERROR"
+        )
         ai_reply = "Je rencontre actuellement des difficultés pour joindre le serveur d'intelligence artificielle. Veuillez réessayer dans quelques instants."
 
     # G. Enregistrer la réponse de l'IA en BDD
     ai_crud.create_message(db, conv_id, sender="assistant", content=ai_reply)
+
+    # H. Log de l'appel LLM
+    user_crud.log_action(
+        db=db, action="APPEL_LLM",
+        user_id=current_user.id,
+        details=f"Message envoyé à l'IA par {current_user.email} (conv #{conv_id})",
+        ip_address=request.client.host if request.client else "inconnu",
+        severity="INFO"
+    )
 
     return ai_schema.AIChatResponse(response=ai_reply, conversation_id=conv_id)
 
@@ -186,6 +280,11 @@ async def stream_generator(api_url, payload, headers, db, conv_id, user_message)
                                 yield content
                         except Exception:
                             continue
+                
+                # Une fois la boucle Mistral terminée avec succès, on injecte les suggestions dynamiques
+                import json
+                suggestions = ["Mes annonces", "Mes réclamations", "Mon profil"]
+                yield f"__SUGGESTIONS__{json.dumps(suggestions)}"
     except Exception as e:
         yield "Désolé, je rencontre des difficultés techniques pour joindre le serveur d'intelligence artificielle."
     finally:
@@ -213,46 +312,66 @@ async def chat_with_assistant_stream(
         if not conversation or conversation.user_id != current_user.id:
             raise HTTPException(status_code=404, detail="Conversation introuvable")
 
-    # B. Récupérer les données réelles du Client en base pour le contexte
-    announcements = db.query(user_model.Announcement).filter(
-        user_model.Announcement.user_id == current_user.id
-    ).all()
-    claims = db.query(user_model.Claim).filter(
-        user_model.Claim.user_id == current_user.id
-    ).all()
+    # B. Détection d'intention (Intent Routing) & Récupération des données optimisée
+    user_msg_lower = request_data.message.lower()
+    
+    intent = "GENERAL"
+    if any(word in user_msg_lower for word in ["bonjour", "salut", "coucou", "hey", "hello"]):
+        if len(user_msg_lower.split()) < 4:
+            intent = "GREETING"
+    elif any(word in user_msg_lower for word in ["réclamation", "reclamation", "problème", "probleme", "panne", "ticket", "remboursement", "lent"]):
+        intent = "CLAIM"
+    elif any(word in user_msg_lower for word in ["annonce", "publication", "budget", "modifier", "pub"]):
+        intent = "ANNOUNCEMENT"
+    else:
+        intent = "ALL"
 
-    # Formater les données du client sous forme textuelle
-    annonces_txt = "\n".join([
-        f"- Titre: {a.title}, Support: {a.support}, Statut: {a.status}, Budget: {a.budget or 0} DH, Réf: {a.reference}"
-        for a in announcements
-    ]) if announcements else "Aucune annonce active."
+    annonces_txt = "Non chargé pour cette requête (hors contexte)."
+    claims_txt = "Non chargé pour cette requête (hors contexte)."
 
-    claims_txt = "\n".join([
-        f"- Sujet: {c.subject}, Priorité: {c.priority}, Statut: {c.status}, Réf: {c.reference}"
-        for c in claims
-    ]) if claims else "Aucune réclamation en cours."
+    if intent in ["ALL", "ANNOUNCEMENT"]:
+        announcements = db.query(user_model.Announcement).filter(
+            user_model.Announcement.user_id == current_user.id
+        ).all()
+        annonces_txt = "\n".join([
+            f"- Titre: {a.title}, Statut: {a.status}, Budget: {a.budget or 0} DH, Réf: {a.reference}"
+            for a in announcements
+        ]) if announcements else "Aucune annonce active."
 
-    # C. Construire le Prompt Système (Le Contexte d'entreprise + FAQ)
+    if intent in ["ALL", "CLAIM"]:
+        claims = db.query(user_model.Claim).filter(
+            user_model.Claim.user_id == current_user.id
+        ).all()
+        claims_txt = "\n".join([
+            f"- Sujet: {c.subject}, Priorité: {c.priority}, Statut: {c.status}, Réf: {c.reference}"
+            for c in claims
+        ]) if claims else "Aucune réclamation en cours."
+
+    # C. Construire le Prompt Système avec Règles Métier
     prompt_base = ai_crud.get_llm_config(db, "llm_system_prompt")
-    base_instructions = prompt_base if prompt_base else "Tu es l'assistant exclusif du portail client Groupe Le Matin."
+    base_instructions = prompt_base if prompt_base else "Tu es l'assistant officiel du portail client Groupe Le Matin."
     
     prompt_system = (
         f"{base_instructions}\n\n"
-        f"--- BASE DE CONNAISSANCES (FAQ DU GROUPE LE MATIN) ---\n"
-        f"- Déposer une réclamation : Rubrique 'Réclamations' du menu latéral.\n"
-        f"- Délai de traitement : Le support technique traite les réclamations en 48h ouvrables.\n"
-        f"- Modifier ou annuler une annonce : Une fois soumise et payée, impossible à modifier. Contacter le support.\n"
-        f"- Changer de mot de passe : Section 'Gérer mon profil'.\n\n"
+        f"--- RÈGLES DE CONDUITE STRICTES ---\n"
+        f"1. Répondre UNIQUEMENT aux questions liées au portail, aux annonces et aux réclamations.\n"
+        f"2. Ne JAMAIS inventer des informations absentes de ce contexte.\n"
+        f"3. Ne JAMAIS divulguer les données d'un autre utilisateur.\n"
+        f"4. Si aucune donnée n'est disponible, l'indiquer clairement.\n"
+        f"5. Si la question est ambiguë, demander une précision poliment.\n\n"
         f"--- DONNÉES DU CLIENT CONNECTÉ ---\n"
         f"Tu discutes avec le client : {current_user.nom}.\n"
-        f"Voici ses données extraites en temps réel :\n"
-        f"=== SES ANNONCES ===\n{annonces_txt}\n\n"
-        f"=== SES RÉCLAMATIONS ===\n{claims_txt}\n\n"
-        f"CONSIGNES IMPORTANTES :\n"
-        f"1. Réponds DIRECTEMENT à la question du client. Si le client demande le statut de son annonce ou réclamation, donne-lui la réponse exacte qui est écrite ci-dessus.\n"
-        f"2. NE RÉPÈTE PAS 'Bonjour' à chaque phrase. Agis comme un humain dans une conversation normale.\n"
-        f"3. Si tu n'as pas l'information dans les données ci-dessus, dis simplement que tu ne sais pas."
     )
+    
+    if intent == "GREETING":
+        prompt_system += "Le client vient de te saluer. Réponds simplement et chaleureusement, sans lister de données.\n"
+    else:
+        prompt_system += (
+            f"Voici ses données :\n"
+            f"=== SES ANNONCES ===\n{annonces_txt}\n\n"
+            f"=== SES RÉCLAMATIONS ===\n{claims_txt}\n\n"
+            f"CONSIGNE : Utilise UNIQUEMENT ces données pour répondre."
+        )
 
     # D. Récupérer les configurations du modèle Mistral depuis la table CONFIGURATION_LLM
     api_url = ai_crud.get_llm_config(db, "llm_endpoint") or "https://api.mistral.ai/v1/chat/completions"

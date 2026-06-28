@@ -36,11 +36,12 @@
   justify-content: center;
   height: 60px;
   border-bottom: 1px solid #e5e9ef;
+  flex-shrink: 0;
 }
 
 .sa-sidebar-logo-img {
   max-width: 98%;
-  max-height: 62px;
+  max-height: 60px;
   object-fit: contain;
 }
 
@@ -125,6 +126,7 @@
   display: flex;
   flex-direction: column;
   overflow-y: auto;
+  scrollbar-gutter: stable; /* Empêche le décalage (saut) de la navbar lors du passage d'une page avec scrollbar à sans scrollbar */
   min-width: 0;
 }
 
@@ -140,6 +142,7 @@
   top: 0;
   z-index: 10;
   height: 60px;
+  flex-shrink: 0;
 }
 
 .sa-header-left {
@@ -195,15 +198,16 @@
   align-items: center;
   gap: 10px;
   background: white;
-  border: 1px solid #e5e9ef;
-  padding: 4px 10px;
-  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  padding: 6px 14px 6px 6px;
+  border-radius: 30px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.2s ease;
 }
 
 .sa-user-trigger:hover {
   background: #f8fafc;
+  border-color: #cbd5e1;
 }
 
 .sa-user-avatar {
@@ -232,9 +236,18 @@
 }
 
 .sa-dropdown-arrow {
-  font-size: 0.6rem;
+  display: flex;
+  align-items: center;
   color: #64748b;
-  margin-left: 4px;
+  margin-left: 8px;
+}
+
+.sa-dropdown-arrow svg {
+  transition: color 0.2s ease;
+}
+
+.sa-user-trigger:hover .sa-dropdown-arrow {
+  color: #1e293b;
 }
 
 .sa-dropdown-menu {
@@ -278,6 +291,57 @@
 
 .sa-dropdown-item.logout:hover {
   background: #fef2f2;
+}
+
+.sa-user-dropdown-item:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.sa-user-dropdown-item.danger { color: #e11d48; }
+.sa-user-dropdown-item.danger:hover { background: #fff1f2; }
+
+.sa-sidebar-overlay {
+  display: none;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 1024px) {
+  .sa-sidebar.open {
+    position: fixed;
+    z-index: 1000;
+    height: 100vh;
+    left: 0;
+    box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+  }
+  .sa-sidebar.closed {
+    position: fixed;
+    z-index: 1000;
+    height: 100vh;
+    left: -220px;
+  }
+  
+  /* Overlay for mobile when sidebar is open */
+  .sa-sidebar-overlay {
+    display: block;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 999;
+  }
+  
+  .sa-header {
+    padding: 0 1rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .sa-user-info {
+    display: none; /* Hide name/role on small screens, keep only avatar */
+  }
+  .sa-page-title {
+    font-size: 0.95rem;
+  }
 }
 
 /* ===== BODY CONTENT ===== */

@@ -27,8 +27,34 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+# Auto-migration pour ajouter ip_address et severity si elles manquent
+from sqlalchemy import text
+
+def check_and_update_database_columns():
+    db = SessionLocal()
+    try:
+        # Vérifier si la colonne 'ip_address' existe
+        result_ip = db.execute(text("SELECT column_name FROM information_schema.columns WHERE table_name='LOGS_SYSTEM' AND column_name='ip_address'")).fetchone()
+        if not result_ip:
+            db.execute(text('ALTER TABLE "LOGS_SYSTEM" ADD COLUMN ip_address VARCHAR(255) NULL'))
+            db.commit()
+            print("Auto-migration : Colonne 'ip_address' ajoutée avec succès.")
         
-        
-        
-        
-# Ce fichier gère la connexion à PostgreSQL.        
+        # Vérifier si la colonne 'severity' existe
+        result_severity = db.execute(text("SELECT column_name FROM information_schema.columns WHERE table_name='LOGS_SYSTEM' AND column_name='severity'")).fetchone()
+        if not result_severity:
+            db.execute(text('ALTER TABLE "LOGS_SYSTEM" ADD COLUMN severity VARCHAR(50) DEFAULT \'INFO\''))
+            db.commit()
+            print("Auto-migration : Colonne 'severity' ajoutée avec succès.")
+    except Exception as e:
+        print(f"Auto-migration de LOGS_SYSTEM : {e}")
+    finally:
+        db.close()
+
+# Lancer la vérification
+check_and_update_database_columns()
+
+
+# Ce fichier gère la connexion à PostgreSQL.

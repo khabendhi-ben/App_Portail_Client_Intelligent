@@ -42,3 +42,16 @@ class AIAdminConversationResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+# 6. Configuration LLM
+class LLMConfigBase(BaseModel):
+    llm_endpoint: str
+    llm_api_key: str
+    llm_model: str
+    llm_system_prompt: str
+
+class LLMConfigResponse(LLMConfigBase):
+    pass
+
+class LLMConfigUpdate(LLMConfigBase):
+    pass

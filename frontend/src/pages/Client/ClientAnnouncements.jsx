@@ -11,19 +11,18 @@ const ClientAnnouncements = () => {
 
   // États de saisie des filtres (temporaires)
   const [inputReference, setInputReference] = useState('');
-  const [inputStartDate, setInputStartDate] = useState('');
-  const [inputEndDate, setInputEndDate] = useState('');
+  const [inputDate, setInputDate] = useState('');
+  const [inputType, setInputType] = useState('all');
   const [inputStatus, setInputStatus] = useState('all');
 
   // États des filtres appliqués (utilisés pour l'appel API)
   const [appliedReference, setAppliedReference] = useState('');
-  const [appliedStartDate, setAppliedStartDate] = useState('');
-  const [appliedEndDate, setAppliedEndDate] = useState('');
+  const [appliedDate, setAppliedDate] = useState('');
+  const [appliedType, setAppliedType] = useState('all');
   const [appliedStatus, setAppliedStatus] = useState('all');
 
-  // États de focus pour l'affichage des placeholders des dates
-  const [isStartDateFocused, setIsStartDateFocused] = useState(false);
-  const [isEndDateFocused, setIsEndDateFocused] = useState(false);
+  // États de focus pour l'affichage du placeholder de la date
+  const [isDateFocused, setIsDateFocused] = useState(false);
 
   // États pour les Annonces
   const [announcements, setAnnouncements] = useState([]);
@@ -100,7 +99,7 @@ const ClientAnnouncements = () => {
 
   useEffect(() => {
     fetchAnnouncements();
-  }, [annPage, appliedReference, appliedStartDate, appliedEndDate, appliedStatus]);
+  }, [annPage, appliedReference, appliedDate, appliedType, appliedStatus]);
 
   const fetchAnnouncements = async () => {
     try {
@@ -113,11 +112,12 @@ const ClientAnnouncements = () => {
       if (appliedReference.trim() !== '') {
         params.reference = appliedReference.trim();
       }
-      if (appliedStartDate) {
-        params.start_date = appliedStartDate;
+      if (appliedDate) {
+        params.start_date = appliedDate;
+        params.end_date = appliedDate; // Filtre sur le jour précis
       }
-      if (appliedEndDate) {
-        params.end_date = appliedEndDate;
+      if (appliedType !== 'all') {
+        params.type = appliedType;
       }
       const response = await api.get('/announcements/me', { params });
       setAnnouncements(response.data.items);
@@ -133,21 +133,21 @@ const ClientAnnouncements = () => {
   const handleFilterSubmit = (e) => {
     if (e) e.preventDefault();
     setAppliedReference(inputReference);
-    setAppliedStartDate(inputStartDate);
-    setAppliedEndDate(inputEndDate);
+    setAppliedDate(inputDate);
+    setAppliedType(inputType);
     setAppliedStatus(inputStatus);
     setAnnPage(1); // Revenir à la première page
   };
 
   const handleResetFilters = () => {
     setInputReference('');
-    setInputStartDate('');
-    setInputEndDate('');
+    setInputDate('');
+    setInputType('all');
     setInputStatus('all');
     
     setAppliedReference('');
-    setAppliedStartDate('');
-    setAppliedEndDate('');
+    setAppliedDate('');
+    setAppliedType('all');
     setAppliedStatus('all');
     
     setAnnPage(1);
@@ -203,11 +203,12 @@ const ClientAnnouncements = () => {
       if (appliedReference.trim()) {
         params.reference = appliedReference.trim();
       }
-      if (appliedStartDate) {
-        params.start_date = appliedStartDate;
+      if (appliedDate) {
+        params.start_date = appliedDate;
+        params.end_date = appliedDate;
       }
-      if (appliedEndDate) {
-        params.end_date = appliedEndDate;
+      if (appliedType !== 'all') {
+        params.type = appliedType;
       }
       
       const response = await api.get('/announcements/me', { params });
@@ -255,8 +256,7 @@ const ClientAnnouncements = () => {
 
       <div className="client-announcements-panel">
         
-        {/* Barre de filtres horizontale */}
-        {/* Barre de filtres (Recherche manuelle avec bouton Filtrer) */}
+        {/* Barre de filtres (Recherche manuelle avec boutons Filtrer / Réinitialiser) */}
         <form onSubmit={handleFilterSubmit} className="orders-filter-bar">
           <input 
             type="text"
@@ -267,24 +267,23 @@ const ClientAnnouncements = () => {
           />
           
           <input 
-            type={isStartDateFocused || inputStartDate ? "date" : "text"}
-            placeholder="Date de début"
-            value={inputStartDate}
-            onFocus={() => setIsStartDateFocused(true)}
-            onBlur={() => setIsStartDateFocused(false)}
-            onChange={(e) => setInputStartDate(e.target.value)}
+            type={isDateFocused || inputDate ? "date" : "text"}
+            placeholder="Date"
+            value={inputDate}
+            onFocus={() => setIsDateFocused(true)}
+            onBlur={() => setIsDateFocused(false)}
+            onChange={(e) => setInputDate(e.target.value)}
             className="orders-filter-input"
           />
-          
-          <input 
-            type={isEndDateFocused || inputEndDate ? "date" : "text"}
-            placeholder="Date de fin"
-            value={inputEndDate}
-            onFocus={() => setIsEndDateFocused(true)}
-            onBlur={() => setIsEndDateFocused(false)}
-            onChange={(e) => setInputEndDate(e.target.value)}
-            className="orders-filter-input"
-          />
+
+          <select 
+            value={inputType} 
+            onChange={(e) => setInputType(e.target.value)}
+            className="orders-filter-select"
+          >
+            <option value="all">Type</option>
+            <option value="COMMANDE JOURNAUX">COMMANDE JOURNAUX</option>
+          </select>
 
           <select 
             value={inputStatus} 
@@ -294,8 +293,6 @@ const ClientAnnouncements = () => {
             <option value="all">Statut</option>
             <option value="active">Actives</option>
             <option value="pending">En attente</option>
-            <option value="rejected">Rejetées</option>
-            <option value="archived">Archivées</option>
           </select>
 
           <button type="submit" className="orders-filter-btn">
@@ -304,6 +301,14 @@ const ClientAnnouncements = () => {
               <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
             </svg>
             Filtrer
+          </button>
+
+          <button 
+            type="button" 
+            onClick={handleResetFilters} 
+            className="orders-reset-btn"
+          >
+            Réinitialiser
           </button>
         </form>
 
@@ -319,7 +324,11 @@ const ClientAnnouncements = () => {
                 borderRadius: '50%',
                 animation: 'client-spin 1s linear infinite'
               }}></div>
-              <span style={{ marginLeft: '8px' }}>Chargement des commandes...</span>
+              <div style={{ padding: '1.5rem', width: '100%' }}>
+                <div className="skeleton skeleton-row"></div>
+                <div className="skeleton skeleton-row"></div>
+                <div className="skeleton skeleton-row"></div>
+              </div>
             </div>
           ) : (
             <div style={{ overflowX: 'auto', width: '100%' }}>
@@ -374,7 +383,7 @@ const ClientAnnouncements = () => {
                             onClick={(e) => toggleDropdown(e, ann.id)}
                             title="Actions"
                           >
-                            •••
+                            &#8942;
                           </button>
                           {openDropdownId === ann.id && (
                             <div className="orders-action-dropdown" onClick={(e) => e.stopPropagation()}>
@@ -422,20 +431,6 @@ const ClientAnnouncements = () => {
                 Suivant
               </button>
             )}
-          </div>
-        )}
-
-        {/* Export au format CSV en bas à droite */}
-        {!annLoading && (
-          <div className="orders-export-container">
-            <button className="orders-btn-export" onClick={handleExportCSV}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '-2px' }}>
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="7 10 12 15 17 10"></polyline>
-                <line x1="12" y1="15" x2="12" y2="3"></line>
-              </svg>
-              Exporter
-            </button>
           </div>
         )}
       </div>
