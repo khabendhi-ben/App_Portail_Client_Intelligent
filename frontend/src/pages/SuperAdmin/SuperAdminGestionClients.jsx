@@ -13,6 +13,8 @@ const SuperAdminGestionClients = () => {
   const [draftSearch, setDraftSearch] = useState('');
   const [draftStatus, setDraftStatus] = useState('all');
   const [activeDropdownId, setActiveDropdownId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   // Fermer le menu dropdown lors du clic à l'extérieur
   useEffect(() => {
@@ -210,6 +212,7 @@ const SuperAdminGestionClients = () => {
   const handleFilter = () => {
     setSearchTerm(draftSearch);
     setStatusFilter(draftStatus);
+    setCurrentPage(1);
   };
 
   const handleReset = () => {
@@ -217,6 +220,7 @@ const SuperAdminGestionClients = () => {
     setDraftStatus('all');
     setSearchTerm('');
     setStatusFilter('all');
+    setCurrentPage(1);
   };
 
   const handleDelete = (client) => {
@@ -285,7 +289,7 @@ const SuperAdminGestionClients = () => {
             <div className="skeleton skeleton-row"></div>
           </div>
         ) : (
-          <div style={{ overflowX: 'auto', width: '100%' }}>
+          <div style={{ overflowX: 'visible', width: '100%', minHeight: '260px' }}>
             <table className="sa-table">
               <thead>
                 <tr>
@@ -306,70 +310,116 @@ const SuperAdminGestionClients = () => {
                     </td>
                   </tr>
                 ) : (
-                  filteredClients.map((client) => (
-                    <tr key={client.id}>
-                      <td><strong>{client.nom || '—'}</strong></td>
-                      <td>{client.company_name || '—'}</td>
-                      <td>{client.email}</td>
-                      <td>{client.phone || '—'}</td>
-                      <td>
-                        <span style={{
-                          background: client.subscription_type === 'Premium' ? '#fef3c7' : '#f0fdf4',
-                          color: client.subscription_type === 'Premium' ? '#b45309' : '#15803d',
-                          padding: '3px 10px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 600
-                        }}>
-                          {client.subscription_type || 'Standard'}
-                        </span>
-                      </td>
-                      <td>
-                        <span className={`sa-badge ${client.is_active ? 'active' : 'inactive'}`}>
-                          {client.is_active ? 'Actif' : 'Inactif'}
-                        </span>
-                      </td>
-                      <td>
-                        <div className="sa-actions-dropdown-container">
-                          <button 
-                            className="sa-settings-btn"
-                            title="Actions"
-                            onClick={() => setActiveDropdownId(activeDropdownId === client.id ? null : client.id)}
-                          >
-                            ⋮
-                          </button>
-                          {activeDropdownId === client.id && (
-                            <div className="sa-dropdown-menu">
-                              <button 
-                                className="sa-dropdown-item" 
-                                onClick={() => { handleOpenEditModal(client); setActiveDropdownId(null); }}
-                              >
-                                Modifier
-                              </button>
-                              <button 
-                                className="sa-dropdown-item" 
-                                onClick={() => { handleResetPassword(client); setActiveDropdownId(null); }}
-                              >
-                                Réinitialiser MDP
-                              </button>
-                              <button 
-                                className="sa-dropdown-item" 
-                                onClick={() => { handleToggleStatus(client); setActiveDropdownId(null); }}
-                              >
-                                {client.is_active ? 'Désactiver' : 'Réactiver'}
-                              </button>
-                              <button 
-                                className="sa-dropdown-item delete" 
-                                onClick={() => { handleDelete(client); setActiveDropdownId(null); }}
-                              >
-                                Supprimer
-                              </button>
-                            </div>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
+                  filteredClients
+                    .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                    .map((client) => (
+                      <tr key={client.id}>
+                        <td><strong>{client.nom || '—'}</strong></td>
+                        <td>{client.company_name || '—'}</td>
+                        <td>{client.email}</td>
+                        <td>{client.phone || '—'}</td>
+                        <td>
+                          <span style={{
+                            background: client.subscription_type === 'Premium' ? '#fef3c7' : '#f0fdf4',
+                            color: client.subscription_type === 'Premium' ? '#b45309' : '#15803d',
+                            padding: '3px 10px', borderRadius: '20px', fontSize: '0.72rem', fontWeight: 600
+                          }}>
+                            {client.subscription_type || 'Standard'}
+                          </span>
+                        </td>
+                        <td>
+                          <span className={`sa-badge ${client.is_active ? 'active' : 'inactive'}`}>
+                            {client.is_active ? 'Actif' : 'Inactif'}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="sa-actions-dropdown-container">
+                            <button 
+                              className="sa-settings-btn"
+                              title="Actions"
+                              onClick={() => setActiveDropdownId(activeDropdownId === client.id ? null : client.id)}
+                            >
+                              ⋮
+                            </button>
+                            {activeDropdownId === client.id && (
+                              <div className="sa-dropdown-menu">
+                                <button 
+                                  className="sa-dropdown-item" 
+                                  onClick={() => { handleOpenEditModal(client); setActiveDropdownId(null); }}
+                                >
+                                  Modifier
+                                </button>
+                                <button 
+                                  className="sa-dropdown-item" 
+                                  onClick={() => { handleResetPassword(client); setActiveDropdownId(null); }}
+                                >
+                                  Réinitialiser MDP
+                                </button>
+                                <button 
+                                  className="sa-dropdown-item" 
+                                  onClick={() => { handleToggleStatus(client); setActiveDropdownId(null); }}
+                                >
+                                  {client.is_active ? 'Désactiver' : 'Réactiver'}
+                                </button>
+                                <button 
+                                  className="sa-dropdown-item delete" 
+                                  onClick={() => { handleDelete(client); setActiveDropdownId(null); }}
+                                >
+                                  Supprimer
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    ))
                 )}
               </tbody>
             </table>
+
+            {filteredClients.length > 0 && Math.ceil(filteredClients.length / itemsPerPage) > 1 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #f1f5f9' }}>
+                <span style={{ fontSize: '0.82rem', color: '#64748b' }}>
+                  Affichage de {(currentPage - 1) * itemsPerPage + 1} à {Math.min(currentPage * itemsPerPage, filteredClients.length)} sur {filteredClients.length} clients
+                </span>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    style={{
+                      padding: '6px 12px',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '6px',
+                      background: 'white',
+                      cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                      opacity: currentPage === 1 ? 0.5 : 1,
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      color: '#475569'
+                    }}
+                  >
+                    Précédent
+                  </button>
+                  <button
+                    disabled={currentPage === Math.ceil(filteredClients.length / itemsPerPage)}
+                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredClients.length / itemsPerPage)))}
+                    style={{
+                      padding: '6px 12px',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '6px',
+                      background: 'white',
+                      cursor: currentPage === Math.ceil(filteredClients.length / itemsPerPage) ? 'not-allowed' : 'pointer',
+                      opacity: currentPage === Math.ceil(filteredClients.length / itemsPerPage) ? 0.5 : 1,
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      color: '#475569'
+                    }}
+                  >
+                    Suivant
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>

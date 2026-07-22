@@ -6,9 +6,13 @@ const AdminGestionClients = () => {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Filtre d'état des clients (pilules), recherche et dropdown actif
-  const [statusFilter, setStatusFilter] = useState('active'); // 'all', 'active', 'inactive'
+  // Filtres actifs
+  const [statusFilter, setStatusFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Brouillons pour la barre de recherche
+  const [draftSearch, setDraftSearch] = useState('');
+  const [draftStatus, setDraftStatus] = useState('all');
   const [activeDropdownId, setActiveDropdownId] = useState(null);
 
   // Fermer le menu dropdown lors du clic à l'extérieur
@@ -285,6 +289,18 @@ const AdminGestionClients = () => {
     );
   };
 
+  const handleFilter = () => {
+    setSearchTerm(draftSearch);
+    setStatusFilter(draftStatus);
+  };
+
+  const handleReset = () => {
+    setDraftSearch('');
+    setDraftStatus('all');
+    setSearchTerm('');
+    setStatusFilter('all');
+  };
+
   const filteredClients = clients.filter(client => {
     const matchesStatus = 
       statusFilter === 'all' || 
@@ -347,40 +363,37 @@ const AdminGestionClients = () => {
         </button>
       </div>
 
-      {/* Barre de recherche & Pilules de filtrage */}
+      {/* Barre de recherche & Filtres style logs */}
       {activeTab === 'list' && (
-        <div className="sa-toolbar">
-          <div className="sa-filters-container" style={{ marginBottom: 0 }}>
-            <button 
-              className={`sa-filter-pill ${statusFilter === 'all' ? 'active' : ''}`}
-              onClick={() => setStatusFilter('all')}
-            >
-              Tous ({clients.length})
+        <div className="sa-logs-filters" style={{ marginBottom: '1.5rem' }}>
+          <input
+            type="text"
+            placeholder="Nom, email ou entreprise..."
+            value={draftSearch}
+            onChange={(e) => setDraftSearch(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleFilter()}
+          />
+          <select value={draftStatus} onChange={(e) => setDraftStatus(e.target.value)}>
+            <option value="all">Statut</option>
+            <option value="active">Actifs</option>
+            <option value="inactive">Désactivés</option>
+          </select>
+          <div className="sa-logs-filter-actions">
+            <button className="sa-logs-filter-btn" onClick={handleFilter}>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              Filtrer
             </button>
-            <button 
-              className={`sa-filter-pill ${statusFilter === 'active' ? 'active' : ''}`}
-              onClick={() => setStatusFilter('active')}
-            >
-              Actifs ({clients.filter(c => c.is_active).length})
+            <button className="sa-logs-reset-btn" onClick={handleReset}>
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="23 4 23 10 17 10"></polyline>
+                <polyline points="1 20 1 14 7 14"></polyline>
+                <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+              </svg>
+              Actualiser
             </button>
-            <button 
-              className={`sa-filter-pill ${statusFilter === 'inactive' ? 'active' : ''}`}
-              onClick={() => setStatusFilter('inactive')}
-            >
-              Désactivés ({clients.filter(c => !c.is_active).length})
-            </button>
-          </div>
-          <div className="sa-search-wrapper">
-            <svg className="sa-search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <circle cx="11" cy="11" r="8"></circle>
-              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-            </svg>
-            <input 
-              type="text"
-              placeholder="Rechercher par nom, email ou entreprise..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
           </div>
         </div>
       )}

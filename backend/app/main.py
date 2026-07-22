@@ -14,7 +14,43 @@ from app.routers.reclamation_router import router as reclamation_router
 from app.routers.ai import router as ai_router
 from app.routers.stats_router import router as stats_router
 
-app = FastAPI(title="Portail Client Intelligent - Groupe Le Matin")
+tags_metadata = [
+    {
+        "name": "Authentification",
+        "description": "Opérations de connexion, déconnexion et réinitialisation de mot de passe (JWT).",
+    },
+    {
+        "name": "Gestion des Utilisateurs",
+        "description": "Opérations d'administration sur les profils utilisateurs et modification des coordonnées.",
+    },
+    {
+        "name": "Gestion des Clients",
+        "description": "Administration et création de comptes clients (Annonceurs) avec automatisation SMTP.",
+    },
+    {
+        "name": "Gestion des Annonces",
+        "description": "CRUD et historique des annonces publicitaires associées aux clients.",
+    },
+    {
+        "name": "Gestion des Réclamations",
+        "description": "Système de tickets pour soumettre, lister et répondre aux réclamations clients.",
+    },
+    {
+        "name": "Assistant IA Chatbot",
+        "description": "Discussion asynchrone intelligente (Mistral LLM) avec streaming SSE et monitoring.",
+    },
+    {
+        "name": "SuperAdmin Stats",
+        "description": "Statistiques et indicateurs de performance pour le tableau de bord SuperAdmin.",
+    },
+]
+
+app = FastAPI(
+    title="Portail Client B2B Intelligent - Groupe Le Matin",
+    description="API REST sécurisée pour le portail B2B du Groupe Le Matin, incluant l'authentification JWT, la gestion des annonces, des réclamations, et un assistant virtuel IA.",
+    version="1.0.0",
+    openapi_tags=tags_metadata,
+)
 
 app.add_middleware(
     CORSMiddleware,

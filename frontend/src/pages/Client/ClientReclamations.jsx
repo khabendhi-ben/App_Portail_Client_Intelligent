@@ -42,6 +42,31 @@ const ClientReclamations = () => {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [selectedReclamation, setSelectedReclamation] = useState(null);
 
+  // Annulation de réclamation
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [cancelTargetId, setCancelTargetId] = useState(null);
+
+  const handleCancelClick = (id) => {
+    setCancelTargetId(id);
+    setShowCancelModal(true);
+  };
+
+  const confirmCancelReclamation = async () => {
+    if (!cancelTargetId) return;
+    try {
+      await api.put(`/reclamations/${cancelTargetId}/cancel`);
+      setShowCancelModal(false);
+      setCancelTargetId(null);
+      fetchReclamations();
+      if (reloadStats) {
+        await reloadStats();
+      }
+    } catch (err) {
+      console.error("Erreur d'annulation de la réclamation:", err);
+      alert(err.response?.data?.detail || "Une erreur est survenue lors de l'annulation.");
+    }
+  };
+
   // Helper pour mapper les statuts et styles de badges
   const getStatusBadge = (status) => {
     switch (status) {
@@ -49,6 +74,8 @@ const ClientReclamations = () => {
         return { className: 'active', label: 'Résolue' };
       case 'pending':
         return { className: 'pending', label: 'En cours' };
+      case 'cancelled':
+        return { className: 'archived', label: 'Annulée' };
       case 'open':
       default:
         return { className: '', label: 'Ouverte', style: { background: '#e8f0fe', color: '#1a73e8' } };
@@ -254,6 +281,7 @@ const ClientReclamations = () => {
             <option value="open">Ouverte</option>
             <option value="pending">En cours</option>
             <option value="resolved">Résolue</option>
+            <option value="cancelled">Annulée</option>
           </select>
 
           <button type="submit" className="orders-filter-btn">
@@ -372,6 +400,15 @@ const ClientReclamations = () => {
                                  >
                                    Voir le détail
                                  </button>
+                                 {rec.status !== 'resolved' && rec.status !== 'cancelled' && (
+                                   <button 
+                                     onClick={() => { handleCancelClick(rec.id); setOpenDropdownId(null); }} 
+                                     className="orders-dropdown-item delete"
+                                     style={{ color: '#ef4444' }}
+                                   >
+                                     Annuler la réclamation
+                                   </button>
+                                 )}
                                </div>
                              )}
                           </td>
@@ -676,7 +713,55 @@ const ClientReclamations = () => {
           </div>
         </div>
       )}
-
+      {/* Modale de confirmation d'annulation de réclamation */}
+      {showCancelModal && (
+        <div className="client-modal-overlay">
+          <div className="client-modal" style={{ maxWidth: '420px', textAlign: 'center' }}>
+            <div className="client-modal-body" style={{ padding: '2.5rem 1.5rem', alignItems: 'center', gap: '1.2rem', display: 'flex', flexDirection: 'column' }}>
+              <div style={{
+                width: '60px',
+                height: '60px',
+                borderRadius: '50%',
+                background: '#fee2e2',
+                color: '#d93025',
+                fontSize: '2.2rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 'bold',
+                marginBottom: '8px',
+                lineHeight: '60px'
+              }}>
+                !
+              </div>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#0f172a', fontWeight: '700' }}>
+                Annuler la réclamation
+              </h3>
+              <p style={{ margin: 0, fontSize: '0.88rem', color: '#475569', lineHeight: '1.5' }}>
+                Êtes-vous sûr de vouloir annuler cette réclamation ? Elle restera visible dans votre tableau de suivi avec le statut "Annulée".
+              </p>
+            </div>
+            <div className="client-modal-footer" style={{ gap: '10px', justifyContent: 'center', width: '100%', padding: '0 1.5rem 1.5rem 1.5rem', boxSizing: 'border-box' }}>
+              <button 
+                type="button" 
+                className="client-btn-pagination" 
+                onClick={() => { setShowCancelModal(false); setCancelTargetId(null); }}
+                style={{ border: '1px solid #cbd5e1', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', background: 'white', fontWeight: '500' }}
+              >
+                Retour
+              </button>
+              <button 
+                type="button" 
+                className="client-btn-modal-close" 
+                onClick={confirmCancelReclamation}
+                style={{ background: '#d93025', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
+              >
+                Confirmer l'annulation
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

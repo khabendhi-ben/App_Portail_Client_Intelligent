@@ -1,6 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import api from '../../services/api';
 import './ClientAssistant.css';
+import './ClientDashboard.css'; // Pour réutiliser le style de la modale overlay et de la card modale
 
 const ClientAssistant = () => {
   const [conversations, setConversations] = useState([]);
@@ -8,6 +11,9 @@ const ClientAssistant = () => {
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [openDeleteMenuId, setOpenDeleteMenuId] = useState(null);
+  const [showDeleteConfirmModal, setShowDeleteConfirmModal] = useState(false);
+  const [deleteTargetConvId, setDeleteTargetConvId] = useState(null);
   const messagesEndRef = useRef(null);
 
   // Charger l'historique des discussions
@@ -29,6 +35,39 @@ const ClientAssistant = () => {
     // L'utilisateur arrivera toujours sur un écran "Nouvelle discussion" vierge
     loadConversations(false);
   }, []);
+
+  // Fermer le menu de suppression lors d'un clic en dehors
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (!e.target.closest('.discussion-actions-btn') && !e.target.closest('.discussion-actions-dropdown')) {
+        setOpenDeleteMenuId(null);
+      }
+    };
+    document.addEventListener('click', handleOutsideClick);
+    return () => document.removeEventListener('click', handleOutsideClick);
+  }, []);
+
+  const handleDeleteConversationClick = (convId) => {
+    setDeleteTargetConvId(convId);
+    setShowDeleteConfirmModal(true);
+    setOpenDeleteMenuId(null);
+  };
+
+  const confirmDeleteConversation = async () => {
+    if (!deleteTargetConvId) return;
+    try {
+      await api.delete(`/ai/conversations/${deleteTargetConvId}`);
+      setShowDeleteConfirmModal(false);
+      setDeleteTargetConvId(null);
+      await loadConversations(false);
+      if (activeConvId === deleteTargetConvId) {
+        handleNewConversation();
+      }
+    } catch (err) {
+      console.error("Erreur de suppression de la discussion:", err);
+      alert("Une erreur est survenue lors de la suppression de la discussion.");
+    }
+  };
 
   // Défiler vers le bas automatiquement
   useEffect(() => {
@@ -201,6 +240,26 @@ const ClientAssistant = () => {
                   {new Date(conv.started_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
                 </span>
               </div>
+              <button 
+                className="discussion-actions-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setOpenDeleteMenuId(openDeleteMenuId === conv.id ? null : conv.id);
+                }}
+                title="Options"
+              >
+                &#8942;
+              </button>
+              {openDeleteMenuId === conv.id && (
+                <div className="discussion-actions-dropdown" onClick={(e) => e.stopPropagation()}>
+                  <button 
+                    onClick={() => handleDeleteConversationClick(conv.id)}
+                    className="discussion-actions-delete"
+                  >
+                    Supprimer
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -243,7 +302,13 @@ const ClientAssistant = () => {
                 )}
                 <div className="message-wrapper">
                   <div className={`chat-bubble ${msg.sender === 'user' ? 'user-bubble' : 'ai-bubble'}`}>
-                    {msg.content}
+                    {msg.sender === 'user' ? (
+                      msg.content
+                    ) : (
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {msg.content}
+                      </ReactMarkdown>
+                    )}
                   </div>
                   {/* Petit horodatage optionnel */}
                   <span className="message-time">
@@ -307,6 +372,56 @@ const ClientAssistant = () => {
           </button>
         </form>
       </div>
+
+      {/* Modale de confirmation de suppression personnalisée */}
+      {showDeleteConfirmModal && (
+        <div className="client-modal-overlay">
+          <div className="client-modal" style={{ maxWidth: '400px', textAlign: 'center' }}>
+            <div className="client-modal-body" style={{ padding: '2.5rem 1.5rem', alignItems: 'center', gap: '1.2rem', display: 'flex', flexDirection: 'column' }}>
+              <div style={{
+                width: '60px',
+                height: '60px',
+                borderRadius: '50%',
+                background: '#fee2e2',
+                color: '#d93025',
+                fontSize: '2.2rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: 'bold',
+                marginBottom: '8px',
+                lineHeight: '60px'
+              }}>
+                !
+              </div>
+              <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#0f172a', fontWeight: '700' }}>
+                Supprimer la discussion
+              </h3>
+              <p style={{ margin: 0, fontSize: '0.88rem', color: '#475569', lineHeight: '1.5' }}>
+                Voulez-vous vraiment masquer cette discussion de votre historique ?
+              </p>
+            </div>
+            <div className="client-modal-footer" style={{ gap: '10px', justifyContent: 'center', width: '100%', padding: '0 1.5rem 1.5rem 1.5rem', boxSizing: 'border-box' }}>
+              <button 
+                type="button" 
+                className="client-btn-pagination" 
+                onClick={() => { setShowDeleteConfirmModal(false); setDeleteTargetConvId(null); }}
+                style={{ border: '1px solid #cbd5e1', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', background: 'white', fontWeight: '500' }}
+              >
+                Annuler
+              </button>
+              <button 
+                type="button" 
+                className="client-btn-modal-close" 
+                onClick={confirmDeleteConversation}
+                style={{ background: '#d93025', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '6px', cursor: 'pointer', fontWeight: '600' }}
+              >
+                Supprimer
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

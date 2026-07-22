@@ -47,11 +47,13 @@
   display: flex;
   align-items: center;
   padding: 10px;
+  padding-right: 32px;
   margin-bottom: 6px;
   border-radius: 4px;
   cursor: pointer;
   transition: background-color 0.15s;
   color: #334155;
+  position: relative;
 }
 
 .discussion-item:hover {
@@ -168,6 +170,35 @@
   background: #f1f5f9;
   color: #1e293b;
   border-top-left-radius: 4px;
+}
+
+/* MARKDOWN STYLES INSIDE AI BUBBLE */
+.ai-bubble table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 10px 0;
+  background: white;
+}
+.ai-bubble th, .ai-bubble td {
+  border: 1px solid #cbd5e1;
+  padding: 8px 12px;
+  text-align: left;
+}
+.ai-bubble th {
+  background-color: #e2e8f0;
+  font-weight: 600;
+}
+.ai-bubble p {
+  margin-top: 0;
+  margin-bottom: 0.5rem;
+}
+.ai-bubble p:last-child {
+  margin-bottom: 0;
+}
+.ai-bubble ul {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-left: 1.5rem;
 }
 
 .user-bubble {
@@ -326,4 +357,63 @@
 .btn-chat-suggestion:hover {
   background: #2e6b6b;
   color: #ffffff;
+}
+
+/* HISTORIQUE - ACTIONS DE DISCUSSION */
+.discussion-actions-btn {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 4px;
+  display: none; /* Masqué par défaut */
+  line-height: 1;
+}
+
+.discussion-item:hover .discussion-actions-btn {
+  display: block; /* Visible au survol */
+}
+
+.discussion-item.active .discussion-actions-btn {
+  display: block; /* Toujours visible si active */
+  color: #64748b;
+}
+
+.discussion-actions-btn:hover {
+  color: #334155;
+}
+
+.discussion-actions-dropdown {
+  position: absolute;
+  right: 8px;
+  top: 35px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  z-index: 50;
+  min-width: 90px;
+  padding: 4px 0;
+}
+
+.discussion-actions-delete {
+  width: 100%;
+  text-align: left;
+  background: none !important;
+  border: none !important;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  color: #ef4444 !important;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.discussion-actions-delete:hover {
+  background-color: #fee2e2 !important;
 }

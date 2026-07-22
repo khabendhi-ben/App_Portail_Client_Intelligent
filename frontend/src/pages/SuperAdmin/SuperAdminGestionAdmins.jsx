@@ -13,6 +13,8 @@ const SuperAdminGestionAdmins = () => {
   const [draftSearch, setDraftSearch] = useState('');
   const [draftStatus, setDraftStatus] = useState('all');
   const [activeDropdownId, setActiveDropdownId] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
 
   // Onglet actif
   const [activeTab, setActiveTab] = useState('list'); // 'list' ou 'requests'
@@ -325,6 +327,7 @@ const SuperAdminGestionAdmins = () => {
   const handleFilter = () => {
     setSearchTerm(draftSearch);
     setStatusFilter(draftStatus);
+    setCurrentPage(1);
   };
 
   const handleReset = () => {
@@ -332,6 +335,7 @@ const SuperAdminGestionAdmins = () => {
     setDraftStatus('all');
     setSearchTerm('');
     setStatusFilter('all');
+    setCurrentPage(1);
   };
 
   return (
@@ -428,7 +432,7 @@ const SuperAdminGestionAdmins = () => {
               <div className="skeleton skeleton-row"></div>
             </div>
           ) : (
-            <div style={{ overflowX: 'auto', width: '100%' }}>
+            <div style={{ overflowX: 'visible', width: '100%', minHeight: '260px' }}>
               <table className="sa-table">
                 <thead>
                   <tr>
@@ -448,61 +452,107 @@ const SuperAdminGestionAdmins = () => {
                       </td>
                     </tr>
                   ) : (
-                    filteredAdmins.map((admin) => (
-                      <tr key={admin.id}>
-                        <td><strong>{admin.nom || '—'}</strong></td>
-                        <td>{admin.email}</td>
-                        <td>{admin.phone || '—'}</td>
-                        <td>{getRoleBadge(admin.role)}</td>
-                        <td>
-                          <span className={`sa-badge ${admin.is_active ? 'active' : 'inactive'}`}>
-                            {admin.is_active ? 'Actif' : 'Inactif'}
-                          </span>
-                        </td>
-                        <td>
-                          <div className="sa-actions-dropdown-container">
-                            <button 
-                              className="sa-settings-btn"
-                              title="Actions"
-                              onClick={() => setActiveDropdownId(activeDropdownId === admin.id ? null : admin.id)}
-                            >
-                              ⋮
-                            </button>
-                            {activeDropdownId === admin.id && (
-                              <div className="sa-dropdown-menu">
-                                <button 
-                                  className="sa-dropdown-item" 
-                                  onClick={() => { handleOpenEditModal(admin); setActiveDropdownId(null); }}
-                                >
-                                  Modifier
-                                </button>
-                                <button 
-                                  className="sa-dropdown-item" 
-                                  onClick={() => { handleOpenResetModal(admin); setActiveDropdownId(null); }}
-                                >
-                                  Réinitialiser MDP
-                                </button>
-                                <button 
-                                  className="sa-dropdown-item" 
-                                  onClick={() => { handleToggleStatus(admin); setActiveDropdownId(null); }}
-                                >
-                                  {admin.is_active ? 'Désactiver' : 'Réactiver'}
-                                </button>
-                                <button 
-                                  className="sa-dropdown-item delete" 
-                                  onClick={() => { handleDeleteAdmin(admin); setActiveDropdownId(null); }}
-                                >
-                                  Supprimer
-                                </button>
-                              </div>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                    filteredAdmins
+                      .slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage)
+                      .map((admin) => (
+                        <tr key={admin.id}>
+                          <td><strong>{admin.nom || '—'}</strong></td>
+                          <td>{admin.email}</td>
+                          <td>{admin.phone || '—'}</td>
+                          <td>{getRoleBadge(admin.role)}</td>
+                          <td>
+                            <span className={`sa-badge ${admin.is_active ? 'active' : 'inactive'}`}>
+                              {admin.is_active ? 'Actif' : 'Inactif'}
+                            </span>
+                          </td>
+                          <td>
+                            <div className="sa-actions-dropdown-container">
+                              <button 
+                                className="sa-settings-btn"
+                                title="Actions"
+                                onClick={() => setActiveDropdownId(activeDropdownId === admin.id ? null : admin.id)}
+                              >
+                                ⋮
+                              </button>
+                              {activeDropdownId === admin.id && (
+                                <div className="sa-dropdown-menu">
+                                  <button 
+                                    className="sa-dropdown-item" 
+                                    onClick={() => { handleOpenEditModal(admin); setActiveDropdownId(null); }}
+                                  >
+                                    Modifier
+                                  </button>
+                                  <button 
+                                    className="sa-dropdown-item" 
+                                    onClick={() => { handleOpenResetModal(admin); setActiveDropdownId(null); }}
+                                  >
+                                    Réinitialiser MDP
+                                  </button>
+                                  <button 
+                                    className="sa-dropdown-item" 
+                                    onClick={() => { handleToggleStatus(admin); setActiveDropdownId(null); }}
+                                  >
+                                    {admin.is_active ? 'Désactiver' : 'Réactiver'}
+                                  </button>
+                                  <button 
+                                    className="sa-dropdown-item delete" 
+                                    onClick={() => { handleDeleteAdmin(admin); setActiveDropdownId(null); }}
+                                  >
+                                    Supprimer
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
                   )}
                 </tbody>
               </table>
+              
+              {filteredAdmins.length > 0 && Math.ceil(filteredAdmins.length / itemsPerPage) > 1 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #f1f5f9' }}>
+                  <span style={{ fontSize: '0.82rem', color: '#64748b' }}>
+                    Affichage de {(currentPage - 1) * itemsPerPage + 1} à {Math.min(currentPage * itemsPerPage, filteredAdmins.length)} sur {filteredAdmins.length} admins
+                  </span>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      style={{
+                        padding: '6px 12px',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '6px',
+                        background: 'white',
+                        cursor: currentPage === 1 ? 'not-allowed' : 'pointer',
+                        opacity: currentPage === 1 ? 0.5 : 1,
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        color: '#475569'
+                      }}
+                    >
+                      Précédent
+                    </button>
+                    <button
+                      disabled={currentPage === Math.ceil(filteredAdmins.length / itemsPerPage)}
+                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, Math.ceil(filteredAdmins.length / itemsPerPage)))}
+                      style={{
+                        padding: '6px 12px',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '6px',
+                        background: 'white',
+                        cursor: currentPage === Math.ceil(filteredAdmins.length / itemsPerPage) ? 'not-allowed' : 'pointer',
+                        opacity: currentPage === Math.ceil(filteredAdmins.length / itemsPerPage) ? 0.5 : 1,
+                        fontSize: '0.8rem',
+                        fontWeight: 600,
+                        color: '#475569'
+                      }}
+                    >
+                      Suivant
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )
         ) : (

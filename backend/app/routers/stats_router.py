@@ -49,15 +49,26 @@ async def get_superadmin_stats(
     # 3. LLM API Status
     llm_status = "Hors ligne"
     endpoint_config = db.query(ConfigurationLLM).filter(ConfigurationLLM.key_name == "llm_endpoint").first()
+    api_key_config = db.query(ConfigurationLLM).filter(ConfigurationLLM.key_name == "llm_api_key").first()
+    model_config = db.query(ConfigurationLLM).filter(ConfigurationLLM.key_name == "llm_model").first()
     
     if endpoint_config and endpoint_config.value:
         try:
-            # We just test the domain/ip to see if it's reachable. Some endpoints might reject GET requests to /chat/completions
-            # but even a 401/404/405 means the server is reachable and "online".
+            headers = {
+                "Authorization": f"Bearer {api_key_config.value if api_key_config else ''}",
+                "Content-Type": "application/json"
+            }
+            payload = {
+                "model": model_config.value if model_config else "mistral-large-latest",
+                "messages": [
+                    {"role": "user", "content": "ping"}
+                ],
+                "max_tokens": 1
+            }
             async with httpx.AsyncClient(timeout=2.0) as client:
-                res = await client.get(endpoint_config.value)
-                # If we get here, the connection succeeded (even if HTTP status is an error like 405 Method Not Allowed)
-                llm_status = "En ligne"
+                res = await client.post(endpoint_config.value, json=payload, headers=headers)
+                if res.status_code == 200:
+                    llm_status = "En ligne"
         except Exception:
             llm_status = "Hors ligne"
 

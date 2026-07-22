@@ -36,7 +36,8 @@ def update_llm_config(db: Session, key_name: str, value: str):
 def get_user_conversations(db: Session, user_id: int):
     """Récupère toutes les conversations d'un client ordonnées par date"""
     return db.query(user_model.AIConversation).filter(
-        user_model.AIConversation.user_id == user_id
+        user_model.AIConversation.user_id == user_id,
+        user_model.AIConversation.is_deleted_by_client == False
     ).order_by(user_model.AIConversation.started_at.desc()).all()
 
 def get_conversation(db: Session, conversation_id: int):
@@ -53,12 +54,14 @@ def create_conversation(db: Session, user_id: int):
     db.refresh(db_conv)
     return db_conv
 
-def create_message(db: Session, conversation_id: int, sender: str, content: str):
+def create_message(db: Session, conversation_id: int, sender: str, content: str, intent: str = None, response_time_ms: int = None):
     """Enregistre un message (de l'utilisateur ou de l'IA) en BDD"""
     db_msg = user_model.AIMessage(
         conversation_id=conversation_id,
         sender=sender,
-        content=content
+        content=content,
+        intent=intent,
+        response_time_ms=response_time_ms
     )
     db.add(db_msg)
     db.commit()

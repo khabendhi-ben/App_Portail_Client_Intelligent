@@ -141,6 +141,8 @@ const AdminReclamations = () => {
         return { label: 'Résolue', style: { background: '#e6f4ea', color: '#137333' } };
       case 'pending':
         return { label: 'En cours', style: { background: '#fef7e0', color: '#b06000' } };
+      case 'cancelled':
+        return { label: 'Annulée', style: { background: '#f1f5f9', color: '#64748b' } };
       case 'open':
       default:
         return { label: 'Ouverte', style: { background: '#e8f0fe', color: '#1a73e8' } };
@@ -243,6 +245,7 @@ const AdminReclamations = () => {
           <option value="open">Ouvertes</option>
           <option value="pending">En cours</option>
           <option value="resolved">Résolues</option>
+          <option value="cancelled">Annulées</option>
         </select>
 
         <select 
@@ -383,6 +386,22 @@ const AdminReclamations = () => {
 
             <form onSubmit={handleSubmitResponse}>
               <div className="client-modal-body" style={{ gap: '1.2rem' }}>
+                {selectedReclamation.status === 'cancelled' && (
+                  <div style={{
+                    background: '#fee2e2',
+                    borderLeft: '4px solid #ef4444',
+                    padding: '10px 14px',
+                    borderRadius: '6px',
+                    color: '#b91c1c',
+                    fontSize: '0.85rem',
+                    fontWeight: '600',
+                    textAlign: 'left',
+                    width: '100%',
+                    boxSizing: 'border-box'
+                  }}>
+                    ⚠️ Cette réclamation a été annulée par le client. Elle est archivée et ne peut plus être modifiée.
+                  </div>
+                )}
                 
                 {/* Métadonnées */}
                 <div className="client-modal-meta-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem', background: '#f8fafc', padding: '1rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
@@ -458,12 +477,15 @@ const AdminReclamations = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', borderTop: '1px solid #e2e8f0', paddingTop: '1rem' }}>
                   
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <label style={{ fontSize: '0.8rem', fontWeight: '600', color: '#475569' }}>Rédiger une réponse *</label>
+                    <label style={{ fontSize: '0.8rem', fontWeight: '600', color: '#475569' }}>
+                      {selectedReclamation.status === 'cancelled' ? "Réponse de l'administration" : "Rédiger une réponse *"}
+                    </label>
                     <textarea
-                      required
-                      placeholder="Ex: Le remboursement a été effectué..."
+                      required={selectedReclamation.status !== 'cancelled'}
+                      placeholder={selectedReclamation.status === 'cancelled' ? "Aucune réponse possible (réclamation annulée)" : "Ex: Le remboursement a été effectué..."}
                       value={replyText}
                       onChange={(e) => setReplyText(e.target.value)}
+                      disabled={selectedReclamation.status === 'cancelled' || submitting}
                       rows="4"
                       style={{
                         padding: '10px',
@@ -471,27 +493,35 @@ const AdminReclamations = () => {
                         borderRadius: '8px',
                         fontSize: '0.9rem',
                         fontFamily: 'inherit',
-                        resize: 'vertical'
+                        resize: 'vertical',
+                        background: selectedReclamation.status === 'cancelled' ? '#f1f5f9' : '#ffffff'
                       }}
                     />
                   </div>
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <label style={{ fontSize: '0.8rem', fontWeight: '600', color: '#475569' }}>Définir le statut *</label>
+                    <label style={{ fontSize: '0.8rem', fontWeight: '600', color: '#475569' }}>Statut de la demande</label>
                     <select
                       value={nextStatus}
                       onChange={(e) => setNextStatus(e.target.value)}
+                      disabled={selectedReclamation.status === 'cancelled' || submitting}
                       style={{
                         padding: '10px',
                         border: '1px solid #cbd5e1',
                         borderRadius: '8px',
                         fontSize: '0.9rem',
-                        background: '#ffffff',
-                        cursor: 'pointer'
+                        background: selectedReclamation.status === 'cancelled' ? '#f1f5f9' : '#ffffff',
+                        cursor: selectedReclamation.status === 'cancelled' ? 'default' : 'pointer'
                       }}
                     >
-                      <option value="resolved">Résolue (Fermer le ticket)</option>
-                      <option value="pending">En cours (Laisser en traitement)</option>
+                      {selectedReclamation.status === 'cancelled' ? (
+                        <option value="cancelled">Annulée (Client)</option>
+                      ) : (
+                        <>
+                          <option value="resolved">Résolue (Fermer le ticket)</option>
+                          <option value="pending">En cours (Laisser en traitement)</option>
+                        </>
+                      )}
                     </select>
                   </div>
 
@@ -500,23 +530,36 @@ const AdminReclamations = () => {
               </div>
 
               <div className="client-modal-footer" style={{ gap: '10px' }}>
-                <button 
-                  type="button" 
-                  className="client-btn-pagination" 
-                  onClick={() => setIsModalOpen(false)}
-                  disabled={submitting}
-                  style={{ border: '1px solid #cbd5e1', padding: '8px 16px' }}
-                >
-                  Annuler
-                </button>
-                <button 
-                  type="submit" 
-                  className="client-btn-modal-close" 
-                  disabled={submitting}
-                  style={{ background: '#2e6b6b' }}
-                >
-                  {submitting ? 'Enregistrement...' : 'Enregistrer la réponse'}
-                </button>
+                {selectedReclamation.status === 'cancelled' ? (
+                  <button 
+                    type="button" 
+                    className="client-btn-modal-close" 
+                    onClick={() => setIsModalOpen(false)}
+                    style={{ background: '#2e6b6b' }}
+                  >
+                    Fermer
+                  </button>
+                ) : (
+                  <>
+                    <button 
+                      type="button" 
+                      className="client-btn-pagination" 
+                      onClick={() => setIsModalOpen(false)}
+                      disabled={submitting}
+                      style={{ border: '1px solid #cbd5e1', padding: '8px 16px' }}
+                    >
+                      Annuler
+                    </button>
+                    <button 
+                      type="submit" 
+                      className="client-btn-modal-close" 
+                      disabled={submitting}
+                      style={{ background: '#2e6b6b' }}
+                    >
+                      {submitting ? 'Enregistrement...' : 'Enregistrer la réponse'}
+                    </button>
+                  </>
+                )}
               </div>
             </form>
 

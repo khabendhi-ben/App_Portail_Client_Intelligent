@@ -84,3 +84,30 @@ def respond_reclamation(
     if not updated_reclamation:
         raise HTTPException(status_code=404, detail="Réclamation introuvable")
     return updated_reclamation
+
+@router.put("/{reclamation_id}/cancel", response_model=reclamation_schema.ReclamationResponse)
+def cancel_reclamation(
+    reclamation_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: user_model.User = Depends(
+        security.require_roles([user_model.UserRole.CLIENT])
+    )
+):
+    """
+    Permet à un client d'annuler sa propre réclamation.
+    """
+    reclamation = db.query(user_model.Claim).filter(
+        user_model.Claim.id == reclamation_id,
+        user_model.Claim.user_id == current_user.id
+    ).first()
+    
+    if not reclamation:
+        raise HTTPException(status_code=404, detail="Réclamation introuvable")
+        
+    if reclamation.status == "resolved":
+        raise HTTPException(status_code=400, detail="Une réclamation résolue ne peut pas être annulée.")
+        
+    reclamation.status = "cancelled"
+    db.commit()
+    db.refresh(reclamation)
+    return reclamation

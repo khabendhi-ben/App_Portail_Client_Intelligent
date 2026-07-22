@@ -39,7 +39,7 @@
   padding: 1.5rem;
   box-shadow: 0 1px 3px rgba(0,0,0,0.06);
   border: 1px solid #e9ecef;
-  overflow-x: auto;
+  overflow: visible;
 }
 
 /* ===== SHARED TABLE STYLES ===== */

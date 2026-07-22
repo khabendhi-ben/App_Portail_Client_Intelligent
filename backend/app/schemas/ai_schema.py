@@ -46,7 +46,7 @@ class AIAdminConversationResponse(BaseModel):
 # 6. Configuration LLM
 class LLMConfigBase(BaseModel):
     llm_endpoint: str
-    llm_api_key: str
+    llm_api_key: Optional[str] = ""
     llm_model: str
     llm_system_prompt: str
 
@@ -55,3 +55,13 @@ class LLMConfigResponse(LLMConfigBase):
 
 class LLMConfigUpdate(LLMConfigBase):
     pass
+
+# 7. Statistiques d'utilisation de l'IA (Dashboard)
+class AIIntentStat(BaseModel):
+    intent: str
+    count: int
+
+class AIBoardStatsResponse(BaseModel):
+    total_requests: int
+    average_response_time_ms: float
+    intent_distribution: List[AIIntentStat]

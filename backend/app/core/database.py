@@ -48,8 +48,15 @@ def check_and_update_database_columns():
             db.execute(text('ALTER TABLE "LOGS_SYSTEM" ADD COLUMN severity VARCHAR(50) DEFAULT \'INFO\''))
             db.commit()
             print("Auto-migration : Colonne 'severity' ajoutée avec succès.")
+            
+        # Vérifier si la colonne 'is_deleted_by_client' existe
+        result_deleted = db.execute(text("SELECT column_name FROM information_schema.columns WHERE table_name='IA_CONVERSATIONS' AND column_name='is_deleted_by_client'")).fetchone()
+        if not result_deleted:
+            db.execute(text('ALTER TABLE "IA_CONVERSATIONS" ADD COLUMN is_deleted_by_client BOOLEAN DEFAULT FALSE NOT NULL'))
+            db.commit()
+            print("Auto-migration : Colonne 'is_deleted_by_client' ajoutée avec succès.")
     except Exception as e:
-        print(f"Auto-migration de LOGS_SYSTEM : {e}")
+        print(f"Auto-migration de la base de données : {e}")
     finally:
         db.close()
 

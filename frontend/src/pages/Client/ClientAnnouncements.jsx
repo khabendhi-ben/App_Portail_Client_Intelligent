@@ -337,7 +337,6 @@ const ClientAnnouncements = () => {
                   <tr>
                     <th>RÉFÉRENCE</th>
                     <th>SUPPORT</th>
-                    <th>TITRE</th>
                     <th>TYPE</th>
                     <th>STATUT</th>
                     <th>MONTANT (TTC)</th>
@@ -348,7 +347,7 @@ const ClientAnnouncements = () => {
                 <tbody>
                   {announcements.length === 0 ? (
                     <tr>
-                      <td colSpan="8" style={{ textAlign: 'center', color: '#94a3b8', padding: '3rem' }}>
+                      <td colSpan="7" style={{ textAlign: 'center', color: '#94a3b8', padding: '3rem' }}>
                         Aucune commande trouvée.
                       </td>
                     </tr>
@@ -361,7 +360,6 @@ const ClientAnnouncements = () => {
                         <td>
                           <span className="orders-support-text">{ann.support || 'LE MATIN'}</span>
                         </td>
-                        <td className="ann-title">{ann.title || '-'}</td>
                         <td>
                           <span className="orders-type-text">{formatType(ann.type)}</span>
                         </td>

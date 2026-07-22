@@ -122,6 +122,7 @@ class AIConversation(Base):
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("UTILISATEURS.id"))
     started_at = Column(DateTime, default=datetime.utcnow)
+    is_deleted_by_client = Column(Boolean, default=False, nullable=False)
     user = relationship("User", back_populates="ai_conversations")
     messages = relationship("AIMessage", back_populates="conversation")
 
@@ -131,6 +132,8 @@ class AIMessage(Base):
     conversation_id = Column(Integer, ForeignKey("IA_CONVERSATIONS.id"))
     sender = Column(String)
     content = Column(Text, nullable=False)
+    intent = Column(String, nullable=True)
+    response_time_ms = Column(Integer, nullable=True)
     timestamp = Column(DateTime, default=datetime.utcnow)
     conversation = relationship("AIConversation", back_populates="messages")
 

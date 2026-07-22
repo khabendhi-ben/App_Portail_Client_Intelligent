@@ -316,8 +316,7 @@ def get_client_dashboard_stats(
         raise HTTPException(status_code=404, detail="Profil client introuvable")
 
     active_announcements_count = db.query(user_model.Announcement).filter(
-        user_model.Announcement.user_id == current_user.id,
-        user_model.Announcement.status == 'active'
+        user_model.Announcement.user_id == current_user.id
     ).count()
 
     open_claims_count = db.query(user_model.Claim).filter(

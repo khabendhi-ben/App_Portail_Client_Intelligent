@@ -83,6 +83,10 @@
   padding: 0;
 }
 
+.sa-nav-item svg {
+  flex-shrink: 0;
+}
+
 .sa-nav-item:hover {
   background: rgba(255,255,255,0.1);
   color: white;

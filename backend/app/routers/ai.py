@@ -24,6 +24,24 @@ def read_conversations(
 ):
     return ai_crud.get_user_conversations(db, current_user.id)
 
+# 1D. Endpoint pour masquer (soft delete) une conversation côté client
+@router.delete("/conversations/{conversation_id}")
+def delete_conversation(
+    conversation_id: int,
+    db: Session = Depends(database.get_db),
+    current_user: user_model.User = Depends(
+        security.require_roles([user_model.UserRole.CLIENT])
+    )
+):
+    conversation = ai_crud.get_conversation(db, conversation_id)
+    if not conversation or conversation.user_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Conversation introuvable")
+    
+    # Soft delete : masqué pour le client, conservé pour l'admin
+    conversation.is_deleted_by_client = True
+    db.commit()
+    return {"message": "Conversation masquée avec succès"}
+
 # 1B. Endpoints de supervision pour l'administration (réservés au rôle ADMIN)
 @router.get("/admin/conversations", response_model=List[ai_schema.AIAdminConversationResponse])
 def read_admin_conversations(
@@ -59,7 +77,11 @@ def read_admin_conversation_messages(
     conversation = ai_crud.get_conversation(db, conversation_id)
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation introuvable")
-    return conversation.messages
+    
+    # Retourner les messages triés par ID (ordre chronologique d'insertion)
+    return db.query(user_model.AIMessage).filter(
+        user_model.AIMessage.conversation_id == conversation_id
+    ).order_by(user_model.AIMessage.id.asc()).all()
 
 # 1C. Configuration LLM (Réservé au SuperAdmin)
 @router.get("/superadmin/config", response_model=ai_schema.LLMConfigResponse)
@@ -128,6 +150,64 @@ async def test_llm_config(
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Erreur de connexion: {str(e)}")
 
+# --- Fonctions utilitaires d'Orchestration IA ---
+
+def detect_intent(message: str, last_message_content: str = "") -> str:
+    """Détecte l'intention de l'utilisateur pour adapter le contexte."""
+    user_msg_lower = message.lower()
+    
+    if any(word in user_msg_lower for word in ["bonjour", "salut", "coucou", "hey", "hello", "bonsoir", "merci", "au revoir", "bye"]):
+        if len(user_msg_lower.split()) < 5:
+            return "GREETING"
+            
+    if any(word in user_msg_lower for word in ["réclamation", "reclamation", "problème", "probleme", "panne", "ticket", "remboursement", "lent", "statut", "état", "etat", "première", "deuxième"]):
+        return "CLAIM"
+        
+    if any(word in user_msg_lower for word in ["annonce", "publication", "budget", "modifier", "pub", "campagne", "sponsoring"]):
+        return "ANNOUNCEMENT"
+        
+    # Fallback historique
+    if last_message_content:
+        last_msg = last_message_content.lower()
+        if "réclamation" in last_msg or "reclamation" in last_msg:
+            return "CLAIM"
+        if "annonce" in last_msg or "campagne" in last_msg:
+            return "ANNOUNCEMENT"
+            
+    return "OTHER"
+
+def build_context(intent: str, current_user: user_model.User, db: Session) -> str:
+    """Construit le contexte métier injecté dans le prompt."""
+    if intent == "GREETING":
+        return "RÈGLE SPÉCIALE: C'est une simple salutation ou remerciement. Réponds chaleureusement en invitant le client à poser ses questions sur le portail, sans lister aucune donnée métier."
+        
+    context_parts = []
+    
+    if intent in ["ANNOUNCEMENT", "ALL", "OTHER"]:
+        announcements = db.query(user_model.Announcement).filter(
+            user_model.Announcement.user_id == current_user.id
+        ).all()
+        annonces_txt = "\n".join([
+            f"- Réf: {a.reference}, Support: {a.support}, Type: {a.type}, Statut: {a.status}, Budget: {a.budget or 0} DH"
+            for a in announcements
+        ]) if announcements else "Vous n'avez aucune annonce."
+        context_parts.append(f"Voici ses annonces:\n{annonces_txt}\n")
+
+    if intent in ["CLAIM", "ALL", "OTHER"]:
+        claims = db.query(user_model.Claim).filter(
+            user_model.Claim.user_id == current_user.id
+        ).all()
+        claims_txt = "\n".join([
+            f"- Sujet: {c.subject}, Priorité: {c.priority}, Statut: {c.status}, Réf: {c.reference}"
+            for c in claims
+        ]) if claims else "Vous n'avez aucune réclamation."
+        context_parts.append(f"Voici ses réclamations UNIQUEMENT:\n{claims_txt}\n")
+        
+    if intent == "OTHER":
+        context_parts.append("RÈGLE SPÉCIALE: La question semble ambiguë, hors domaine, ou concerne une entité non gérée (profil, adresses). Demande des précisions ou refuse poliment.")
+
+    return "\n".join(context_parts)
+
 # 2. Endpoint principal de discussion
 @router.post("/chat", response_model=ai_schema.AIChatResponse)
 async def chat_with_assistant(
@@ -158,7 +238,7 @@ async def chat_with_assistant(
 
     # Formater les données du client sous forme textuelle
     annonces_txt = "\n".join([
-        f"- Titre: {a.title}, Support: {a.support}, Statut: {a.status}, Budget: {a.budget or 0} DH, Réf: {a.reference}"
+        f"- Réf: {a.reference}, Support: {a.support}, Type: {a.type}, Statut: {a.status}, Budget: {a.budget or 0} DH"
         for a in announcements
     ]) if announcements else "Aucune annonce active."
 
@@ -169,19 +249,28 @@ async def chat_with_assistant(
 
     # C. Construire le Prompt Système (Le Contexte d'entreprise)
     prompt_base = ai_crud.get_llm_config(db, "llm_system_prompt")
-    # Définition hors de l'f-string pour éviter le problème de syntaxe d'antislash (\)
-    base_instructions = prompt_base if prompt_base else "Tu es l'assistant marketing officiel du Groupe Le Matin."
+    
+    default_prompt = (
+        "Tu es l'assistant marketing officiel du Groupe Le Matin.\n"
+        "Consignes importantes :\n"
+        "1. Si le message de l'utilisateur est une simple salutation (ex: 'Bonjour', 'Salut', 'Hey', etc.), réponds de manière brève, chaleureuse et professionnelle (ex: 'Bonjour ! Comment puis-je vous aider aujourd'hui avec vos annonces ou vos réclamations sur le Portail Le Matin ?'). NE liste et NE détaille PAS ses annonces ou réclamations immédiatement.\n"
+        "2. N'utilise et ne détaille ces données que si l'utilisateur pose une question spécifique sur ses annonces, ses réclamations ou ses commandes.\n"
+        "3. Si la question sort du cadre de la gestion de ses annonces, réclamations ou du Portail Le Matin, réponds poliment que tu es un assistant spécialisé dans la gestion de ses données du Portail Le Matin."
+    )
+    
+    base_instructions = prompt_base if prompt_base else default_prompt
+    user_phone = current_user.phone or (current_user.client_profile.phone if current_user.client_profile else None) or "Non renseigné"
     
     prompt_system = (
         f"{base_instructions}\n\n"
-        f"Tu discutes avec le client {current_user.nom} (Entreprise: {current_user.client_profile.company_name if current_user.client_profile else 'N/A'}).\n"
+        f"Tu discutes avec le client suivant :\n"
+        f"- Nom : {current_user.nom or 'Non renseigné'}\n"
+        f"- Email : {current_user.email}\n"
+        f"- Téléphone : {user_phone}\n"
+        f"- Entreprise : {current_user.client_profile.company_name if current_user.client_profile else 'N/A'}\n\n"
         f"Voici ses données actuelles extraites en temps réel de notre base de données :\n"
         f"=== SES ANNONCES ===\n{annonces_txt}\n\n"
-        f"=== SES RÉCLAMATIONS ===\n{claims_txt}\n\n"
-        f"Consignes importantes :\n"
-        f"1. Si le message de l'utilisateur est une simple salutation (ex: 'Bonjour', 'Salut', 'Hey', etc.), réponds de manière brève, chaleureuse et professionnelle (ex: 'Bonjour ! Comment puis-je vous aider aujourd\'hui avec vos annonces ou vos réclamations sur le Portail Le Matin ?'). NE liste et NE détaille PAS ses annonces ou réclamations immédiatement.\n"
-        f"2. N'utilise et ne détaille ces données que si l'utilisateur pose une question spécifique sur ses annonces, ses réclamations ou ses commandes.\n"
-        f"3. Si la question sort du cadre de la gestion de ses annonces, réclamations ou du Portail Le Matin, réponds poliment que tu es un assistant spécialisé dans la gestion de ses données du Portail Le Matin."
+        f"=== SES RÉCLAMATIONS ===\n{claims_txt}\n"
     )
 
     # D. Enregistrer la question de l'utilisateur en BDD
@@ -250,10 +339,13 @@ async def chat_with_assistant(
 
     return ai_schema.AIChatResponse(response=ai_reply, conversation_id=conv_id)
 
-async def stream_generator(api_url, payload, headers, db, conv_id, user_message):
+async def stream_generator(api_url, payload, headers, db, conv_id, user_message, intent):
     """Générateur asynchrone pour lire le flux du LLM et l'envoyer au client, puis l'enregistrer en BDD"""
-    # Enregistrer le message de l'utilisateur immédiatement en BDD
-    ai_crud.create_message(db, conv_id, sender="user", content=user_message)
+    import time
+    start_time = time.time()
+    
+    # Enregistrer le message de l'utilisateur immédiatement en BDD avec son intention
+    ai_crud.create_message(db, conv_id, sender="user", content=user_message, intent=intent)
     
     accumulated_content = []
     try:
@@ -289,9 +381,10 @@ async def stream_generator(api_url, payload, headers, db, conv_id, user_message)
         yield "Désolé, je rencontre des difficultés techniques pour joindre le serveur d'intelligence artificielle."
     finally:
         # Une fois le streaming terminé avec succès, enregistrer la réponse complète de l'IA en BDD
+        response_time_ms = int((time.time() - start_time) * 1000)
         if accumulated_content:
             complete_response = "".join(accumulated_content)
-            ai_crud.create_message(db, conv_id, sender="assistant", content=complete_response)
+            ai_crud.create_message(db, conv_id, sender="assistant", content=complete_response, intent=intent, response_time_ms=response_time_ms)
 
 # 3. Endpoint principal de discussion en Streaming (Progressif)
 @router.post("/chat/stream")
@@ -312,66 +405,45 @@ async def chat_with_assistant_stream(
         if not conversation or conversation.user_id != current_user.id:
             raise HTTPException(status_code=404, detail="Conversation introuvable")
 
-    # B. Détection d'intention (Intent Routing) & Récupération des données optimisée
-    user_msg_lower = request_data.message.lower()
-    
-    intent = "GENERAL"
-    if any(word in user_msg_lower for word in ["bonjour", "salut", "coucou", "hey", "hello"]):
-        if len(user_msg_lower.split()) < 4:
-            intent = "GREETING"
-    elif any(word in user_msg_lower for word in ["réclamation", "reclamation", "problème", "probleme", "panne", "ticket", "remboursement", "lent"]):
-        intent = "CLAIM"
-    elif any(word in user_msg_lower for word in ["annonce", "publication", "budget", "modifier", "pub"]):
-        intent = "ANNOUNCEMENT"
-    else:
-        intent = "ALL"
+    # B. Détection d'intention (Intent Routing)
+    last_msg_content = ""
+    if conversation and conversation.messages:
+        last_msg_content = conversation.messages[-1].content
+    intent = detect_intent(request_data.message, last_msg_content)
 
-    annonces_txt = "Non chargé pour cette requête (hors contexte)."
-    claims_txt = "Non chargé pour cette requête (hors contexte)."
+    # C. Récupération des données optimisée via Context Builder
+    context_data = build_context(intent, current_user, db)
 
-    if intent in ["ALL", "ANNOUNCEMENT"]:
-        announcements = db.query(user_model.Announcement).filter(
-            user_model.Announcement.user_id == current_user.id
-        ).all()
-        annonces_txt = "\n".join([
-            f"- Titre: {a.title}, Statut: {a.status}, Budget: {a.budget or 0} DH, Réf: {a.reference}"
-            for a in announcements
-        ]) if announcements else "Aucune annonce active."
-
-    if intent in ["ALL", "CLAIM"]:
-        claims = db.query(user_model.Claim).filter(
-            user_model.Claim.user_id == current_user.id
-        ).all()
-        claims_txt = "\n".join([
-            f"- Sujet: {c.subject}, Priorité: {c.priority}, Statut: {c.status}, Réf: {c.reference}"
-            for c in claims
-        ]) if claims else "Aucune réclamation en cours."
-
-    # C. Construire le Prompt Système avec Règles Métier
+    # D. Construire le Prompt Système structuré (Prompt Engineering)
     prompt_base = ai_crud.get_llm_config(db, "llm_system_prompt")
-    base_instructions = prompt_base if prompt_base else "Tu es l'assistant officiel du portail client Groupe Le Matin."
     
-    prompt_system = (
-        f"{base_instructions}\n\n"
-        f"--- RÈGLES DE CONDUITE STRICTES ---\n"
-        f"1. Répondre UNIQUEMENT aux questions liées au portail, aux annonces et aux réclamations.\n"
-        f"2. Ne JAMAIS inventer des informations absentes de ce contexte.\n"
-        f"3. Ne JAMAIS divulguer les données d'un autre utilisateur.\n"
-        f"4. Si aucune donnée n'est disponible, l'indiquer clairement.\n"
-        f"5. Si la question est ambiguë, demander une précision poliment.\n\n"
-        f"--- DONNÉES DU CLIENT CONNECTÉ ---\n"
-        f"Tu discutes avec le client : {current_user.nom}.\n"
+    default_prompt = (
+        "Tu es l'assistant officiel du portail client Groupe Le Matin.\n"
+        "Consignes importantes :\n"
+        "1. Répondre UNIQUEMENT aux questions liées au portail, aux annonces et aux réclamations.\n"
+        "2. Si la question est hors domaine (ex: météo, recettes, président, commandes, factures, adresse), répondre STRICTEMENT: 'Je peux uniquement répondre aux questions concernant le portail client.'\n"
+        "3. Si l'utilisateur demande des informations sur SES commandes ou profil et qu'elles ne sont pas dans le contexte fourni, réponds STRICTEMENT: 'Je ne dispose d'aucune information concernant vos commandes/profil.'\n"
+        "4. CLOISONNEMENT: Si l'utilisateur demande des informations sur UNE AUTRE PERSONNE (Mohamed, Fatima, etc.), réponds STRICTEMENT: 'Je ne peux pas accéder aux informations d'un autre utilisateur.'\n"
+        "5. Ne JAMAIS inventer des informations absentes du contexte.\n"
+        "6. Si la question est ambiguë et que le contexte historique est insuffisant, demander une précision poliment.\n"
+        "7. Si c'est une salutation ('Bonjour', 'Bonsoir', 'Salut'), réponds par une salutation polie, et demande comment tu peux l'aider concernant son espace client.\n"
+        "8. Si c'est un remerciement ('Merci'), réponds 'Avec plaisir' ou similaire, et invite à poser d'autres questions."
     )
     
-    if intent == "GREETING":
-        prompt_system += "Le client vient de te saluer. Réponds simplement et chaleureusement, sans lister de données.\n"
-    else:
-        prompt_system += (
-            f"Voici ses données :\n"
-            f"=== SES ANNONCES ===\n{annonces_txt}\n\n"
-            f"=== SES RÉCLAMATIONS ===\n{claims_txt}\n\n"
-            f"CONSIGNE : Utilise UNIQUEMENT ces données pour répondre."
-        )
+    base_instructions = prompt_base if prompt_base else default_prompt
+    user_phone = current_user.phone or (current_user.client_profile.phone if current_user.client_profile else None) or "Non renseigné"
+    
+    prompt_system = (
+        f"[ROLE & RÈGLES]\n"
+        f"{base_instructions}\n\n"
+        f"[CONTEXTE DU CLIENT]\n"
+        f"- Nom : {current_user.nom or 'Non renseigné'}\n"
+        f"- Email : {current_user.email}\n"
+        f"- Téléphone : {user_phone}\n"
+        f"- Entreprise : {current_user.client_profile.company_name if current_user.client_profile else 'N/A'}\n\n"
+        f"[DONNÉES DU PORTAIL]\n"
+        f"{context_data}\n"
+    )
 
     # D. Récupérer les configurations du modèle Mistral depuis la table CONFIGURATION_LLM
     api_url = ai_crud.get_llm_config(db, "llm_endpoint") or "https://api.mistral.ai/v1/chat/completions"
@@ -387,8 +459,8 @@ async def chat_with_assistant_stream(
     # Construire l'historique de la conversation pour que l'IA ait de la mémoire
     messages_payload = [{"role": "system", "content": prompt_system}]
     if conversation and conversation.messages:
-        # Prendre les 6 derniers messages pour avoir le contexte sans surcharger
-        for m in conversation.messages[-6:]:
+        # Prendre l'historique complet de la conversation
+        for m in conversation.messages:
             if m.content:
                 messages_payload.append({"role": m.sender, "content": m.content})
                 
@@ -404,7 +476,48 @@ async def chat_with_assistant_stream(
     }
 
     return StreamingResponse(
-        stream_generator(api_url, payload, headers, db, conv_id, request_data.message),
+        stream_generator(api_url, payload, headers, db, conv_id, request_data.message, intent),
         media_type="text/event-stream",
         headers={"X-Conversation-Id": str(conv_id)}
+    )
+
+# 4. Statistiques pour l'administration (SuperAdmin)
+@router.get("/superadmin/stats", response_model=ai_schema.AIBoardStatsResponse)
+def get_ai_stats(
+    db: Session = Depends(database.get_db),
+    current_user: user_model.User = Depends(
+        security.require_roles([user_model.UserRole.SUPERADMIN])
+    )
+):
+    from sqlalchemy import func
+    
+    # 1. Total des requêtes (messages des utilisateurs)
+    total_requests = db.query(user_model.AIMessage).filter(
+        user_model.AIMessage.sender == "user"
+    ).count()
+    
+    # 2. Temps de réponse moyen (messages de l'assistant)
+    avg_response_time = db.query(func.avg(user_model.AIMessage.response_time_ms)).filter(
+        user_model.AIMessage.sender == "assistant",
+        user_model.AIMessage.response_time_ms != None
+    ).scalar() or 0.0
+    
+    # 3. Répartition des intentions (sur les requêtes utilisateur)
+    intent_counts = db.query(
+        user_model.AIMessage.intent, 
+        func.count(user_model.AIMessage.id)
+    ).filter(
+        user_model.AIMessage.sender == "user",
+        user_model.AIMessage.intent != None
+    ).group_by(user_model.AIMessage.intent).all()
+    
+    intent_distribution = [
+        ai_schema.AIIntentStat(intent=row[0] or "UNKNOWN", count=row[1]) 
+        for row in intent_counts
+    ]
+    
+    return ai_schema.AIBoardStatsResponse(
+        total_requests=total_requests,
+        average_response_time_ms=float(avg_response_time),
+        intent_distribution=intent_distribution
     )
