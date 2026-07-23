@@ -1,15 +1,25 @@
-Pourquoi avoir choisi un ORM (SQLAlchemy) plutôt que du SQL brut ?
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+env/
+.env
+.coverage
+.pytest_cache/
 
-Réponse : « L'utilisation de l'ORM SQLAlchemy nous protège nativement contre les failles d'injections SQL grâce à la paramétrisation automatique des requêtes. De plus, cela rend le code plus maintenable et nous permet de changer de système de base de données (passer de PostgreSQL à un autre SGBD) sans réécrire notre code SQL. »
+# Node/React
+node_modules/
+dist/
+.eslintcache
 
-Quel est le rôle du middleware CORS que l'on voit dans votre code ?
-Réponse : « CORS (Cross-Origin Resource Sharing) est une sécurité du navigateur. Il a été configuré dans FastAPI pour n'autoriser que l'origine http://localhost:5173 (le frontend React). Si un site malveillant tente de faire des requêtes vers notre API, le serveur rejettera automatiquement l'appel. »
+# Local databases
+*.db
+*.sqlite
 
-Pourquoi asynchronisme est-il important pour le serveur SMTP ?
-
-Réponse : « L'envoi d'un e-mail via SMTP prend généralement 1 à 2 secondes. Si nous le faisions de manière synchrone, l'administrateur verrait son écran bloqué pendant ce temps lors de la création d'un client. En utilisant les tâches d'arrière-plan de FastAPI (BackgroundTasks), l'e-mail est envoyé en tâche de fond, et l'interface administrateur répond instantanément. »
-
-La question possible du jury : « Si l'IA est locale, pourquoi votre code backend fait-il des requêtes vers l'adresse externe https://api.mistral.ai/v1/chat/completions ? »
-Votre réponse parfaite si on vous interroge :
-
-« Dans notre base de données, l'adresse de l'API (endpoint) est entièrement configurable. Pendant le développement, nous avons utilisé l'API cloud de Mistral pour nos tests. Mais en production, l'architecture permet de remplacer cette URL par l'adresse d'un serveur d'inférence local (comme Ollama ou vLLM hébergé en interne par le Groupe Le Matin) pour faire tourner le modèle Ministral 8B localement, sans changer une seule ligne de code. »
+# IDEs
+.vscode/
+.idea/
+.DS_Store

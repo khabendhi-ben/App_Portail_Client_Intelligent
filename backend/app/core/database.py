@@ -33,6 +33,11 @@ def get_db():
 from sqlalchemy import text
 
 def check_and_update_database_columns():
+    # Import des modèles pour enregistrement des métadonnées
+    import app.models.user_model as user_model
+    # Création automatique de toutes les tables si elles n'existent pas
+    Base.metadata.create_all(bind=engine)
+    
     db = SessionLocal()
     try:
         # Vérifier si la colonne 'ip_address' existe
